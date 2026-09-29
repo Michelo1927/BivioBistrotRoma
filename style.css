@@ -1,17 +1,19 @@
 /* ==========================================================================
    Bivio Bistrot — stile
-   Bistrot contemporaneo: carta calda, inchiostro nero, ottone desaturato.
+   Colori del logo: bordeaux Bivio su crema.
    ========================================================================== */
 
 /* ---------- Design token ---------- */
 :root {
-  --bg: #F7F5F0;
-  --surface: #FFFFFF;
-  --ink: #1A1A1A;
-  --muted: #6B665E;
-  --line: #E4DFD5;
-  --accent: #9C8150;
-  --accent-soft: #EFE8DA;
+  --brand: #731223;       /* bordeaux del logo */
+  --brand-cream: #FEE2B3; /* crema del logo (fondo header) */
+  --bg: #FDF4E3;
+  --surface: #FFFBF3;
+  --ink: #2A1216;
+  --muted: #7A5F57;
+  --line: #EED9B8;
+  --accent: var(--brand);
+  --accent-soft: #F9E6C4;
   --sage: #8C9A80;
 
   --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
@@ -77,7 +79,8 @@ data { font-variant-numeric: tabular-nums; }
 .site-header {
   position: relative; /* ancora per il selettore lingua */
   text-align: center;
-  padding: clamp(48px, 10vw, 96px) var(--gutter) clamp(32px, 6vw, 56px);
+  padding: clamp(56px, 10vw, 96px) var(--gutter) clamp(32px, 6vw, 56px);
+  background: var(--brand-cream);
 }
 .site-header__overline {
   font-size: .75rem;
@@ -85,23 +88,14 @@ data { font-variant-numeric: tabular-nums; }
   letter-spacing: .32em;
   text-transform: uppercase;
   color: var(--accent);
+  margin-top: 1rem;
   padding-left: .32em; /* compensa il letter-spacing per centrare otticamente */
 }
-.site-header__title {
-  margin-top: .35em;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(2.6rem, 7vw, 4.5rem);
-  line-height: 1.05;
-  letter-spacing: .01em;
-}
-.site-header__tagline {
-  margin-top: .9rem;
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 500;
-  font-size: clamp(1.05rem, 2.6vw, 1.3rem);
-  color: var(--muted);
+.site-header__title { line-height: 0; }
+.site-header__logo {
+  width: clamp(220px, 64vw, 380px);
+  height: auto;
+  margin: 0 auto;
 }
 /* Pulsanti Maps / WhatsApp */
 .site-header__actions {
@@ -116,7 +110,7 @@ data { font-variant-numeric: tabular-nums; }
   align-items: center;
   gap: .45rem;
   padding: .5rem 1rem;
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
   border-radius: 999px;
   background: transparent;
   color: var(--ink);
@@ -160,7 +154,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   text-decoration-thickness: 1px;
   text-underline-offset: .45em;
 }
-.lang-switch__sep { width: 1px; height: 14px; background: var(--line); }
+.lang-switch__sep { width: 1px; height: 14px; background: color-mix(in srgb, var(--brand) 30%, transparent); }
 
 .site-header__ornament {
   display: block;
@@ -175,7 +169,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(247, 245, 240, .92);
+  background: rgba(253, 244, 227, .94);
   border-bottom: 1px solid var(--line);
 }
 @supports (backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px)) {
@@ -230,9 +224,9 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 }
 .tab:hover { border-color: var(--accent); }
 .tab[aria-selected="true"] {
-  background: var(--ink);
-  border-color: var(--ink);
-  color: var(--bg);
+  background: var(--brand);
+  border-color: var(--brand);
+  color: var(--brand-cream);
 }
 
 /* Subnav: chip testuali; .subnav è il contenitore di riferimento per offsetLeft (script.js) */
@@ -577,8 +571,8 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--ink);
-  color: var(--bg);
+  background: var(--brand);
+  color: var(--brand-cream);
   opacity: 0;
   transform: translateY(8px);
   visibility: hidden;
@@ -619,16 +613,16 @@ html.is-modal-open { overflow: hidden; }
   padding: 0; /* il padding sta su .lang-modal__panel: così e.target === dialog solo sul backdrop */
   border: 0;
   border-radius: 6px;
-  background: var(--bg);
+  background: var(--brand-cream);
   color: var(--ink);
   text-align: center;
-  box-shadow: 0 18px 50px rgba(26, 26, 26, .16), 0 2px 8px rgba(26, 26, 26, .08);
+  box-shadow: 0 18px 50px rgba(42, 18, 22, .18), 0 2px 8px rgba(42, 18, 22, .08);
   overflow: visible;
 }
 .lang-modal__panel { padding: clamp(28px, 6vw, 48px); }
 .lang-modal__panel:focus { outline: none; } /* riceve il focus iniziale: nessun anello visibile */
 .lang-modal::backdrop {
-  background: rgba(26, 26, 26, .38);
+  background: rgba(42, 18, 22, .42);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
@@ -642,21 +636,11 @@ html.is-modal-open { overflow: hidden; }
 @keyframes lang-modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes lang-modal-fade-out { from { opacity: 1; } to { opacity: 0; } }
 
-.lang-modal__overline {
-  font-size: .75rem;
-  font-weight: 500;
-  letter-spacing: .32em;
-  text-transform: uppercase;
-  color: var(--accent);
-  padding-left: .32em;
-}
-.lang-modal__title {
-  margin-top: .3em;
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(2rem, 8vw, 2.6rem);
-  line-height: 1.1;
-  letter-spacing: .01em;
+.lang-modal__title { line-height: 0; }
+.lang-modal__logo {
+  width: min(100%, 260px);
+  height: auto;
+  margin: 0 auto;
 }
 .lang-modal__ornament {
   display: block;
@@ -734,7 +718,8 @@ html.is-modal-open { overflow: hidden; }
 /* ---------- Stampa ---------- */
 @media print {
   .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .site-header__actions, .lang-modal { display: none !important; }
-  body { background: #fff; }
+  body, .site-header { background: #fff; }
+  .site-header__logo { width: 200px; }
   .site-header { padding: 0 0 1rem; }
   .dish-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
   .category, .dish, .wine, .spirit { break-inside: avoid; }
