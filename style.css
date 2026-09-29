@@ -1,0 +1,742 @@
+/* ==========================================================================
+   Bivio Bistrot — stile
+   Bistrot contemporaneo: carta calda, inchiostro nero, ottone desaturato.
+   ========================================================================== */
+
+/* ---------- Design token ---------- */
+:root {
+  --bg: #F7F5F0;
+  --surface: #FFFFFF;
+  --ink: #1A1A1A;
+  --muted: #6B665E;
+  --line: #E4DFD5;
+  --accent: #9C8150;
+  --accent-soft: #EFE8DA;
+  --sage: #8C9A80;
+
+  --serif: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius: 4px;
+  --maxw: 1120px;
+  --gutter: clamp(16px, 5vw, 48px);
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --nav-h: 96px; /* sovrascritta da script.js con l'altezza reale della nav */
+}
+
+/* ---------- Reset minimo ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-wrap: break-word;
+}
+
+h1, h2, h3, p, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+img, svg { display: block; max-width: 100%; }
+button { font: inherit; color: inherit; cursor: pointer; }
+data { font-variant-numeric: tabular-nums; }
+/* Cormorant usa numeri "old-style": "Talisker 10" sembrerebbe "Talisker IO" */
+.dish__name, .wine__name, .spirit__name, .category__title { font-variant-numeric: lining-nums; }
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#top:focus, #menu:focus { outline: none; }
+
+/* ---------- Skip link ---------- */
+.skip-link {
+  position: absolute;
+  left: 16px;
+  top: -60px;
+  z-index: 100;
+  padding: .6rem 1rem;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: .875rem;
+  text-decoration: none;
+  border-radius: var(--radius);
+  transition: top .2s var(--ease);
+}
+.skip-link:focus { top: 12px; }
+
+/* ---------- Header ---------- */
+.site-header {
+  position: relative; /* ancora per il selettore lingua */
+  text-align: center;
+  padding: clamp(48px, 10vw, 96px) var(--gutter) clamp(32px, 6vw, 56px);
+}
+.site-header__overline {
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-left: .32em; /* compensa il letter-spacing per centrare otticamente */
+}
+.site-header__title {
+  margin-top: .35em;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2.6rem, 7vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: .01em;
+}
+.site-header__tagline {
+  margin-top: .9rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: clamp(1.05rem, 2.6vw, 1.3rem);
+  color: var(--muted);
+}
+/* Pulsanti Maps / WhatsApp */
+.site-header__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: .5rem;
+  margin-top: 1.4rem;
+}
+.pill-link {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: .02em;
+  text-decoration: none;
+  transition: border-color .2s var(--ease);
+}
+.pill-link svg { flex: 0 0 auto; color: var(--accent); }
+a.pill-link[href]:hover { border-color: var(--accent); }
+.pill-link[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
+
+/* Selettore lingua: in alto a destra, non sticky */
+.lang-switch {
+  position: absolute;
+  top: 12px;
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+}
+.lang-switch__btn {
+  min-width: 36px;
+  min-height: 36px;
+  padding: 0 .5rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  transition: color .2s var(--ease);
+}
+.lang-switch__btn:hover { color: var(--ink); }
+.lang-switch__btn[aria-pressed="true"] {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: .45em;
+}
+.lang-switch__sep { width: 1px; height: 14px; background: var(--line); }
+
+.site-header__ornament {
+  display: block;
+  width: 48px;
+  height: 1px;
+  margin: 1.75rem auto 0;
+  background: var(--accent);
+}
+
+/* ---------- Navigazione sticky ---------- */
+.menu-nav {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(247, 245, 240, .92);
+  border-bottom: 1px solid var(--line);
+}
+@supports (backdrop-filter: blur(8px)) or (-webkit-backdrop-filter: blur(8px)) {
+  .menu-nav {
+    background: color-mix(in srgb, var(--bg) 82%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+  }
+}
+.menu-nav__inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: .75rem var(--gutter) .25rem;
+}
+
+/* Tab: pill; su schermi stretti la riga scorre in orizzontale (scrollbar nascosta) */
+.tabs,
+.subnav {
+  display: flex;
+  gap: .5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  -webkit-overflow-scrolling: touch;
+}
+.tabs::-webkit-scrollbar,
+.subnav::-webkit-scrollbar { display: none; }
+
+.tabs {
+  padding: 3px; /* spazio per l'outline del focus, altrimenti tagliato dall'overflow */
+  margin: -3px;
+}
+/* Centratura "sicura": margini auto che si annullano quando la riga va in overflow */
+.tab:first-child,
+.chip:first-child { margin-left: auto; }
+.tab:last-child,
+.chip:last-child { margin-right: auto; }
+
+.tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  padding: .5rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: .02em;
+  transition: border-color .2s var(--ease), background-color .2s var(--ease), color .2s var(--ease);
+}
+.tab:hover { border-color: var(--accent); }
+.tab[aria-selected="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+
+/* Subnav: chip testuali; .subnav è il contenitore di riferimento per offsetLeft (script.js) */
+.subnav {
+  position: relative;
+  gap: 1.25rem;
+  padding: 0 3px;
+  margin: .25rem -3px 0;
+  scroll-snap-type: x proximity;
+}
+.subnav:empty { display: none; }
+
+.chip {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  white-space: nowrap;
+  padding: .6rem 0 .55rem;
+  border-bottom: 1px solid transparent;
+  color: var(--muted);
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: color .2s var(--ease), border-color .2s var(--ease);
+}
+.chip:hover { color: var(--ink); }
+.chip[aria-current="true"] {
+  color: var(--ink);
+  border-bottom-color: var(--accent);
+}
+
+/* ---------- Contenitore menu ---------- */
+.menu {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: clamp(24px, 5vw, 48px) var(--gutter) clamp(40px, 8vw, 80px);
+  min-height: 60vh;
+}
+.menu__notice {
+  padding: 3rem 0;
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 1.25rem;
+}
+
+/* ---------- Categoria ---------- */
+.category {
+  scroll-margin-top: calc(var(--nav-h) + 16px);
+  padding-top: clamp(24px, 4vw, 40px);
+}
+.category + .category { margin-top: clamp(32px, 6vw, 64px); }
+.category:first-child { padding-top: 0; }
+
+.category__heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: .9rem;
+  row-gap: 0;
+  padding-bottom: .6rem;
+  margin-bottom: clamp(20px, 3vw, 32px);
+  border-bottom: 1px solid var(--line);
+}
+.category__title {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
+  line-height: 1.15;
+}
+.category__subtitle {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--muted);
+}
+
+/* ---------- Cibo ---------- */
+.dish-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: clamp(28px, 4vw, 44px) clamp(20px, 3vw, 32px);
+}
+.dish {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dish__media {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: var(--radius);
+  background: var(--accent-soft);
+}
+.dish__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .6s var(--ease);
+}
+@media (hover: hover) {
+  .dish:hover .dish__media img { transform: scale(1.03); }
+}
+/* Segnaposto grafico: stesso box, icona centrata */
+.dish__media--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dish__icon {
+  width: 30%;
+  max-width: 96px;
+  height: auto;
+  color: var(--accent);
+  opacity: .55;
+}
+
+.dish__body { padding-top: .9rem; }
+.dish__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.dish__name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.35rem;
+  line-height: 1.2;
+  min-width: 0;
+}
+.dish__price {
+  flex: 0 0 auto;
+  font-size: .95rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+.dish__desc {
+  margin-top: .35rem;
+  font-size: .92rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+
+/* ---------- Leader tratteggiato (vini e distillati) ---------- */
+.leader {
+  flex: 1 1 1.5rem;
+  min-width: 1rem;
+  height: 0;
+  border-bottom: 1px dotted var(--muted);
+  opacity: .55;
+}
+
+/* ---------- Vini ---------- */
+.wine-cols {
+  display: flex;
+  justify-content: flex-end;
+  padding-bottom: .5rem;
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.wine-cols span,
+.wine__price {
+  width: 5.5rem;
+  text-align: right;
+}
+
+.wine {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "head prices"
+    "meta prices";
+  align-items: baseline;
+  column-gap: 1rem;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--line);
+}
+.wine:last-child { border-bottom: 0; }
+
+.wine__head {
+  grid-area: head;
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  min-width: 0;
+}
+.wine__name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.3rem;
+  line-height: 1.2;
+  min-width: 0;
+}
+.wine__meta {
+  grid-area: meta;
+  margin-top: .15rem;
+  font-size: .8125rem;
+  color: var(--muted);
+}
+.wine__prices {
+  grid-area: prices;
+  display: flex;
+}
+.wine__price {
+  position: relative;
+  font-size: .95rem;
+  font-variant-numeric: tabular-nums;
+}
+.wine__label {
+  /* Desktop: etichetta solo per screen reader (l'intestazione colonne la mostra) */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.badge {
+  flex: 0 0 auto;
+  padding: .05rem .5rem;
+  border: 1px solid var(--sage);
+  border-radius: 999px;
+  color: var(--sage);
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+/* Mobile: nome e meta in alto, prezzi sotto con etichetta inline */
+@media (max-width: 599.98px) {
+  .wine-cols { display: none; }
+  .wine {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "head" "meta" "prices";
+    row-gap: 0;
+    padding: .9rem 0;
+  }
+  .wine__head .leader { display: none; }
+  .wine__prices {
+    margin-top: .4rem;
+    gap: 1.25rem;
+  }
+  .wine__price {
+    width: auto;
+    text-align: left;
+    font-size: .9rem;
+  }
+  .wine__label {
+    position: static;
+    width: auto;
+    height: auto;
+    overflow: visible;
+    clip-path: none;
+    margin-right: .4em;
+    font-size: .6875rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+}
+
+/* ---------- Distillati ---------- */
+.spirit-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: clamp(32px, 6vw, 72px);
+}
+@media (min-width: 800px) {
+  .spirit-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.spirit {
+  display: flex;
+  align-items: baseline;
+  gap: .75rem;
+  padding: .6rem 0;
+}
+.spirit__head {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: .6rem;
+  min-width: 0;
+}
+.spirit__name {
+  font-family: var(--serif);
+  font-weight: 600;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  min-width: 0;
+}
+.spirit__kind {
+  flex: 0 0 auto;
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.spirit__price {
+  flex: 0 0 auto;
+  font-size: .95rem;
+  font-weight: 500;
+}
+
+/* ---------- Footer ---------- */
+.site-footer {
+  padding: 2.5rem var(--gutter) calc(2.5rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  text-align: center;
+  font-size: .875rem;
+  color: var(--muted);
+}
+.site-footer__copy {
+  margin-top: .35rem;
+  font-size: .75rem;
+  letter-spacing: .04em;
+}
+
+/* ---------- Torna su ---------- */
+.to-top {
+  position: fixed;
+  right: max(16px, env(safe-area-inset-right, 0px));
+  bottom: max(16px, env(safe-area-inset-bottom, 0px));
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--bg);
+  opacity: 0;
+  transform: translateY(8px);
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .3s var(--ease), transform .3s var(--ease), visibility 0s linear .3s;
+}
+.to-top.is-visible {
+  opacity: 1;
+  transform: none;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.to-top[hidden] { display: none; }
+
+/* ---------- Animazione d'ingresso ---------- */
+@keyframes enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+/* Cibo: stagger sulle card. Vini/distillati: stagger sulle categorie. */
+.is-entering:not(.no-anim) .category--wine,
+.is-entering:not(.no-anim) .category--spirit,
+.is-entering:not(.no-anim) .dish {
+  animation: enter .45s var(--ease) both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+.is-entering:not(.no-anim) .category--food .category__heading {
+  animation: enter .45s var(--ease) both;
+}
+
+/* ---------- Modale scelta lingua ---------- */
+html.is-modal-open { overflow: hidden; }
+
+.lang-modal {
+  width: min(92vw, 440px);
+  max-width: 92vw;
+  padding: 0; /* il padding sta su .lang-modal__panel: così e.target === dialog solo sul backdrop */
+  border: 0;
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--ink);
+  text-align: center;
+  box-shadow: 0 18px 50px rgba(26, 26, 26, .16), 0 2px 8px rgba(26, 26, 26, .08);
+  overflow: visible;
+}
+.lang-modal__panel { padding: clamp(28px, 6vw, 48px); }
+.lang-modal__panel:focus { outline: none; } /* riceve il focus iniziale: nessun anello visibile */
+.lang-modal::backdrop {
+  background: rgba(26, 26, 26, .38);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+.lang-modal[open] { animation: lang-modal-in .3s var(--ease) both; }
+.lang-modal[open]::backdrop { animation: lang-modal-fade-in .3s var(--ease) both; }
+.lang-modal.is-closing { animation: lang-modal-out .2s var(--ease) both; }
+.lang-modal.is-closing::backdrop { animation: lang-modal-fade-out .2s var(--ease) both; }
+
+@keyframes lang-modal-in { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: none; } }
+@keyframes lang-modal-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.98); } }
+@keyframes lang-modal-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lang-modal-fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.lang-modal__overline {
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .32em;
+  text-transform: uppercase;
+  color: var(--accent);
+  padding-left: .32em;
+}
+.lang-modal__title {
+  margin-top: .3em;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(2rem, 8vw, 2.6rem);
+  line-height: 1.1;
+  letter-spacing: .01em;
+}
+.lang-modal__ornament {
+  display: block;
+  width: 32px;
+  height: 1px;
+  margin: 1.1rem auto .95rem;
+  background: var(--accent);
+}
+.lang-modal__subtitle {
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.15rem;
+  color: var(--muted);
+}
+.lang-modal__choices {
+  display: flex;
+  gap: .75rem;
+  margin-top: 1.75rem;
+}
+.lang-modal__btn {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 56px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .3rem;
+  padding: 1.1rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color .2s var(--ease), transform .2s var(--ease);
+}
+.lang-modal__btn:hover,
+.lang-modal__btn:focus-visible { border-color: var(--accent); }
+.lang-modal__btn:hover { transform: translateY(-1px); }
+.lang-modal__name {
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+.lang-modal__hint {
+  font-size: .6875rem;
+  font-weight: 500;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding-left: .14em;
+}
+@media (max-width: 419.98px) {
+  .lang-modal__choices { flex-direction: column; }
+}
+
+/* ---------- Movimento ridotto ---------- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-delay: 0s !important;
+    transition-duration: .01ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* ---------- Schermi molto stretti ---------- */
+@media (max-width: 380px) {
+  .tab { padding: .5rem .85rem; font-size: .78rem; }
+  .dish__name { font-size: 1.25rem; }
+}
+
+/* ---------- Stampa ---------- */
+@media print {
+  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .site-header__actions, .lang-modal { display: none !important; }
+  body { background: #fff; }
+  .site-header { padding: 0 0 1rem; }
+  .dish-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+  .category, .dish, .wine, .spirit { break-inside: avoid; }
+  .is-entering .category--wine, .is-entering .category--spirit, .is-entering .dish { animation: none; }
+}

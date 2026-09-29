@@ -1,0 +1,17 @@
+﻿SEZIONE: Per Iniziare
+Cartella: assets/images/per-iniziare/
+
+FILE ATTESI (nome file = id del piatto, tutto minuscolo)
+  uovo-croccante.jpg                Uovo croccante
+  millefoglie-melanzane.jpg         Millefoglie di melanzane
+  burrata.jpg                       Burrata
+  pane-burro-alici.jpg              Pane, burro e alici
+  arancino.jpg                      Arancino della chef
+
+FORMATO CONSIGLIATO
+  JPG, rapporto 4:3, 1200x900 oppure 800x600, peso inferiore a 300 KB.
+
+NOTA
+  Se il file manca il sito usa la foto di esempio Unsplash;
+  se manca anche quella mostra un'icona segnaposto.
+  Usa solo minuscolo nei nomi: su hosting Linux maiuscole e minuscole sono diverse.

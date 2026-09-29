@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menu — Bivio Bistrot Roma</title>
+  <meta name="description" data-i18n-content="description" content="Il menu di Bivio Bistrot a Roma: cucina di stagione, carta dei vini e distillati.">
+  <meta name="theme-color" content="#F7F5F0">
+
+  <!-- Favicon inline: monogramma "B" -->
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%231A1A1A'/%3E%3Ctext x='32' y='45' font-family='Georgia,serif' font-size='40' text-anchor='middle' fill='%23F7F5F0'%3EB%3C/text%3E%3C/svg%3E">
+
+  <!-- Font: Cormorant Garamond (titoli) + Inter (testo) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+
+  <link rel="stylesheet" href="style.css">
+  <!-- Script classici (no moduli): funziona anche da file:// — l'ordine conta -->
+  <script defer src="menu-data.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#menu" data-i18n="skip">Vai al menu</a>
+
+  <header class="site-header" id="top" tabindex="-1">
+    <div class="lang-switch" role="group" aria-label="Lingua" data-i18n-aria="langLabel">
+      <button type="button" class="lang-switch__btn" data-lang="it" aria-pressed="true" lang="it">IT</button>
+      <span class="lang-switch__sep" aria-hidden="true"></span>
+      <button type="button" class="lang-switch__btn" data-lang="en" aria-pressed="false" lang="en">EN</button>
+    </div>
+    <p class="site-header__overline">Roma</p>
+    <h1 class="site-header__title">Bivio Bistrot</h1>
+    <p class="site-header__tagline" data-i18n="tagline">Cucina di stagione, vini e distillati</p>
+    <div class="site-header__actions">
+      <a class="pill-link" data-link="maps" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.300"/></svg><span data-i18n="maps">Come arrivare</span></a>
+      <a class="pill-link" data-link="whatsapp" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1.300-4.100A8 8 0 1 1 8.200 18.800L4 20Z"/><path d="M9.200 9.300c.2 2.800 2.700 5 5.500 5.300l1.100-1.400-2-1-.9.700a4 4 0 0 1-1.900-1.900l.7-.9-1-2-1.500 1.200Z"/></svg><span data-i18n="whatsapp">WhatsApp</span></a>
+    </div>
+    <span class="site-header__ornament" aria-hidden="true"></span>
+  </header>
+
+  <!-- Navigazione sticky: tab delle sezioni + chip delle categorie (popolati da script.js) -->
+  <nav class="menu-nav" aria-label="Sezioni del menu" data-i18n-aria="navLabel">
+    <div class="menu-nav__inner">
+      <div class="tabs" role="tablist" aria-label="Sezioni" data-i18n-aria="sections"></div>
+      <div class="subnav" aria-label="Categorie" data-i18n-aria="categoriesLabel"></div>
+    </div>
+  </nav>
+
+  <main id="menu" class="menu" tabindex="-1">
+    <noscript><p class="menu__notice">Per visualizzare il menu è necessario abilitare JavaScript.</p></noscript>
+  </main>
+
+  <footer class="site-footer">
+    <p data-i18n="allergens">Per allergie e intolleranze chiedi al nostro personale.</p>
+    <p class="site-footer__copy">© <span id="year">2025</span> Bivio Bistrot · Roma</p>
+  </footer>
+
+  <!-- Modale di scelta lingua al primo accesso (aperto da script.js solo se non c'è una scelta esplicita).
+       Contenuto bilingue fisso: l'utente non ha ancora scelto. -->
+  <dialog class="lang-modal" aria-labelledby="lang-modal-title">
+    <div class="lang-modal__panel" tabindex="-1">
+      <p class="lang-modal__overline">Roma</p>
+      <h2 class="lang-modal__title" id="lang-modal-title">Bivio Bistrot</h2>
+      <span class="lang-modal__ornament" aria-hidden="true"></span>
+      <p class="lang-modal__subtitle">Scegli la lingua · Choose your language</p>
+      <div class="lang-modal__choices">
+        <button type="button" class="lang-modal__btn" data-lang="it" lang="it">
+          <span class="lang-modal__name">Italiano</span>
+          <span class="lang-modal__hint">Benvenuti</span>
+        </button>
+        <button type="button" class="lang-modal__btn" data-lang="en" lang="en">
+          <span class="lang-modal__name">English</span>
+          <span class="lang-modal__hint">Welcome</span>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <button class="to-top" type="button" aria-label="Torna su" data-i18n-aria="toTop" hidden>
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5.5 11.5 12 5l6.5 6.5"/></svg>
+  </button>
+</body>
+</html>

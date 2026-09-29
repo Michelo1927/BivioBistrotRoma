@@ -1,0 +1,21 @@
+﻿IMMAGINI DEL MENU
+Struttura cartelle: una cartella per ogni categoria della cucina.
+  assets/images/per-iniziare/
+  assets/images/per-continuare/
+  assets/images/per-finire/
+  assets/images/insieme-a/
+  assets/images/in-dolcezza/
+Vini e distillati non hanno immagini e quindi non hanno cartelle.
+
+REGOLA DEI NOMI
+  assets/images/<categoria>/<id-del-piatto>.jpg
+  L'id e la categoria sono quelli scritti in menu-data.js, sempre in minuscolo
+  (su hosting Linux i nomi file distinguono maiuscole e minuscole).
+
+FORMATO: JPG 4:3 (1200x900 o 800x600), sotto i 300 KB.
+
+AGGIUNGERE UN PIATTO NUOVO
+  1. In menu-data.js aggiungi il piatto in "dishes" con id univoco, category e
+     image: "assets/images/<categoria>/<id>.jpg" (e la traduzione en, se serve).
+  2. Salva la foto con lo stesso nome nella cartella della categoria.
+  Se la foto manca il sito usa il placeholder Unsplash, poi un'icona.

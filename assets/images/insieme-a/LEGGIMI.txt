@@ -1,0 +1,15 @@
+﻿SEZIONE: Insieme A (Contorni)
+Cartella: assets/images/insieme-a/
+
+FILE ATTESI (nome file = id del piatto, tutto minuscolo)
+  broccoletti.jpg                   Broccoletti saltati
+  cicoria.jpg                       Cicoria saltata
+  verdure-griglia.jpg               Verdure di stagione alla griglia
+
+FORMATO CONSIGLIATO
+  JPG, rapporto 4:3, 1200x900 oppure 800x600, peso inferiore a 300 KB.
+
+NOTA
+  Se il file manca il sito usa la foto di esempio Unsplash;
+  se manca anche quella mostra un'icona segnaposto.
+  Usa solo minuscolo nei nomi: su hosting Linux maiuscole e minuscole sono diverse.

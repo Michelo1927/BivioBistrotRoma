@@ -1,0 +1,16 @@
+﻿SEZIONE: Per Finire
+Cartella: assets/images/per-finire/
+
+FILE ATTESI (nome file = id del piatto, tutto minuscolo)
+  tagliata-pollo.jpg                Tagliata di pollo
+  tartare-fassona.jpg               Tartare di fassona / scottona
+  entrecote.jpg                     Entrecôte danese ai ferri
+  guancia-brasata.jpg               Guancia brasata
+
+FORMATO CONSIGLIATO
+  JPG, rapporto 4:3, 1200x900 oppure 800x600, peso inferiore a 300 KB.
+
+NOTA
+  Se il file manca il sito usa la foto di esempio Unsplash;
+  se manca anche quella mostra un'icona segnaposto.
+  Usa solo minuscolo nei nomi: su hosting Linux maiuscole e minuscole sono diverse.

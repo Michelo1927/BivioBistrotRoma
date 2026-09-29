@@ -1,0 +1,16 @@
+﻿SEZIONE: Per Continuare
+Cartella: assets/images/per-continuare/
+
+FILE ATTESI (nome file = id del piatto, tutto minuscolo)
+  mezze-maniche-norma.jpg           Mezze maniche alla Norma
+  gnocchetti-pistacchio.jpg         Gnocchetti al pesto di pistacchio
+  tonnarello.jpg                    Tonnarello
+  piatto-del-giorno.jpg             Piatto del giorno
+
+FORMATO CONSIGLIATO
+  JPG, rapporto 4:3, 1200x900 oppure 800x600, peso inferiore a 300 KB.
+
+NOTA
+  Se il file manca il sito usa la foto di esempio Unsplash;
+  se manca anche quella mostra un'icona segnaposto.
+  Usa solo minuscolo nei nomi: su hosting Linux maiuscole e minuscole sono diverse.

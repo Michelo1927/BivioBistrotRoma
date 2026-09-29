@@ -1,0 +1,14 @@
+﻿SEZIONE: In Dolcezza (Dessert)
+Cartella: assets/images/in-dolcezza/
+
+FILE ATTESI (nome file = id del piatto, tutto minuscolo)
+  cannolo.jpg                       Cannolo siciliano
+  cheesecake.jpg                    Cheesecake
+
+FORMATO CONSIGLIATO
+  JPG, rapporto 4:3, 1200x900 oppure 800x600, peso inferiore a 300 KB.
+
+NOTA
+  Se il file manca il sito usa la foto di esempio Unsplash;
+  se manca anche quella mostra un'icona segnaposto.
+  Usa solo minuscolo nei nomi: su hosting Linux maiuscole e minuscole sono diverse.
