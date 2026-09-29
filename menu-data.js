@@ -10,7 +10,8 @@
  *  - sections   : sezioni del menu, nell'ordine in cui compaiono come tab.
  *                 `type` decide il renderer: "food" | "wine" | "spirit".
  *                 Ogni sezione ha le sue `categories` (ordine = ordine di rendering).
- *  - dishes     : piatti   -> { id, name, description, price, category, image, placeholder }
+ *  - dishes     : piatti   -> { id, name, description, price (null = nessun prezzo mostrato), allergens, frozen?, category, image, placeholder }
+ *  - allergens  : i 14 allergeni del regolamento UE 1169/2011 -> { id (1-14), name, en: { name } }
  *  - wines      : vini     -> { id, name, winery, detail, vintage, abv (numero, es. 12.5), organic, bottlePrice, glassPrice, category }
  *  - spirits    : distillati -> { id, name, kind, price, category }
  *
@@ -18,6 +19,13 @@
  *  Aggiungi un oggetto in `dishes` sotto il commento della categoria giusta.
  *  `id` deve essere univoco (kebab-case), `category` deve esistere nella sezione "cucina",
  *  `price` è un numero (euro). Lascia `description: ""` se non c'è descrizione.
+ *
+ * ALLERGENI E PRODOTTI GELO (solo piatti)
+ *  `allergens` sul piatto:
+ *    - array di id (1-14, vedi `allergens`) = allergeni presenti, mostrati nell'ordine degli id;
+ *    - []                                   = nessun allergene dichiarato (non si mostra nulla);
+ *    - "chef"                               = allergeni comunicati separatamente in base alla ricetta della Chef.
+ *  `frozen: true` = prodotto gelo: un asterisco dopo il nome rimanda alla nota in fondo alla legenda.
  *
  * COME AGGIUNGERE UN VINO / UN DISTILLATO
  *  Aggiungi un oggetto in `wines` / `spirits` con `category` valida per la sezione "vini" / "distillati".
@@ -68,7 +76,12 @@ window.BIVIO_MENU = Object.freeze({
       description: "Il menu di Bivio Bistrot a Roma: cucina di stagione, carta dei vini e distillati.",
       sections: "Sezioni",
       galleryPill: "Il locale", galleryOpen: "Guarda le foto del locale",
-      close: "Chiudi", prev: "Foto precedente", next: "Foto successiva", openPhoto: "Apri foto"
+      close: "Chiudi", prev: "Foto precedente", next: "Foto successiva", openPhoto: "Apri foto",
+      allergensTitle: "Allergeni", allergensLabel: "Allergeni", allergensInfoTitle: "Informazioni sugli allergeni",
+      allergensChef: "Allergeni comunicati separatamente in base alla ricetta della Chef",
+      frozenNote: "Prodotto gelo: i prodotti alimentari freschi e/o preparati nel nostro laboratorio possono subire una corretta procedura di abbattimento e rinvenimento per garantire un prodotto sempre di alta qualità.",
+      allergyAsk: "Per favore comunica qualsiasi allergia al personale.",
+      frozenMark: "Prodotto gelo"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -80,7 +93,12 @@ window.BIVIO_MENU = Object.freeze({
       description: "The Bivio Bistrot menu in Rome: seasonal kitchen, wine list and spirits.",
       sections: "Sections",
       galleryPill: "The place", galleryOpen: "See photos of the place",
-      close: "Close", prev: "Previous photo", next: "Next photo", openPhoto: "Open photo"
+      close: "Close", prev: "Previous photo", next: "Next photo", openPhoto: "Open photo",
+      allergensTitle: "Allergens", allergensLabel: "Allergens", allergensInfoTitle: "Allergen information",
+      allergensChef: "Allergens provided separately, based on the Chef's recipe",
+      frozenNote: "Frozen product: fresh food and/or products made in our kitchen may undergo a proper blast-chilling and thawing process to guarantee consistently high quality.",
+      allergyAsk: "Please let our staff know about any allergies.",
+      frozenMark: "Frozen product"
     }
   },
 
@@ -99,11 +117,11 @@ window.BIVIO_MENU = Object.freeze({
     {
       id: "vini", label: "Carta dei Vini", en: { label: "Wine List" }, type: "wine",
       categories: [
+        { id: "prosecco", label: "Prosecco DOC", en: { label: "Prosecco DOC" } },
+        { id: "bollicine", label: "Bollicine", en: { label: "Sparkling" } },
         { id: "bianchi", label: "Bianchi", en: { label: "Whites" } },
-        { id: "rossi", label: "Rossi", en: { label: "Reds" } },
         { id: "rose", label: "Rosé", en: { label: "Rosé" } },
-        { id: "prosecco", label: "Prosecco D.O.C.G.", en: { label: "Prosecco D.O.C.G." } },
-        { id: "bollicine", label: "Bollicine", en: { label: "Sparkling" } }
+        { id: "rossi", label: "Rossi", en: { label: "Reds" } }
       ]
     },
     {
@@ -159,37 +177,57 @@ window.BIVIO_MENU = Object.freeze({
     }
   ],
 
+  // ------------------------------------------------------------------ ALLERGENI
+  // I 14 allergeni da dichiarare secondo il regolamento UE 1169/2011. L'id è il numero ufficiale
+  // usato da `dish.allergens`; l'ordine dell'array è l'ordine della legenda.
+  allergens: [
+    { id: 1,  name: "Glutine",                       en: { name: "Gluten" } },
+    { id: 2,  name: "Crostacei",                     en: { name: "Crustaceans" } },
+    { id: 3,  name: "Uova",                          en: { name: "Eggs" } },
+    { id: 4,  name: "Pesce",                         en: { name: "Fish" } },
+    { id: 5,  name: "Arachidi",                      en: { name: "Peanuts" } },
+    { id: 6,  name: "Soia",                          en: { name: "Soy" } },
+    { id: 7,  name: "Latte",                         en: { name: "Milk" } },
+    { id: 8,  name: "Frutta a guscio",               en: { name: "Tree nuts" } },
+    { id: 9,  name: "Sedano",                        en: { name: "Celery" } },
+    { id: 10, name: "Senape",                        en: { name: "Mustard" } },
+    { id: 11, name: "Semi di sesamo",                en: { name: "Sesame seeds" } },
+    { id: 12, name: "Anidride solforosa e solfiti",  en: { name: "Sulphur dioxide and sulphites" } },
+    { id: 13, name: "Lupini",                        en: { name: "Lupin" } },
+    { id: 14, name: "Molluschi",                     en: { name: "Molluscs" } }
+  ],
+
   // ------------------------------------------------------------------ CUCINA
   dishes: [
     // --- Per Iniziare
     {
       id: "uovo-croccante", name: "Uovo croccante",
-      description: "Dal cuore morbido, su fonduta di parmigiano al profumo di limone",
-      price: 15, category: "per-iniziare", image: "assets/images/per-iniziare/uovo-croccante.jpg",
+      description: "Dal cuore morbido, su fonduta di Parmigiano al profumo di limone",
+      price: 15, allergens: [1, 3, 7], category: "per-iniziare", image: "assets/images/per-iniziare/uovo-croccante.jpg",
       en: { name: "Crispy egg", description: "Soft-centred, on Parmigiano fondue scented with lemon" },
       placeholder: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "millefoglie-melanzane", name: "Millefoglie di melanzane", description: "",
-      price: 15, category: "per-iniziare", image: "assets/images/per-iniziare/millefoglie-melanzane.jpg",
+      price: 13, allergens: [3, 5, 8, 9], category: "per-iniziare", image: "assets/images/per-iniziare/millefoglie-melanzane.jpg",
       en: { name: "Aubergine millefeuille", description: "" },
       placeholder: "https://images.unsplash.com/photo-1632229095740-8c75082087c5?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "burrata", name: "Burrata", description: "Pomodorini confit, basilico e olio EVO",
-      price: 13, category: "per-iniziare", image: "assets/images/per-iniziare/burrata.jpg",
+      price: 13, allergens: [7, 8], category: "per-iniziare", image: "assets/images/per-iniziare/burrata.jpg",
       en: { name: "Burrata", description: "Confit cherry tomatoes, basil and extra virgin olive oil" },
       placeholder: "https://images.unsplash.com/photo-1555072930-714bba1d24e2?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "pane-burro-alici", name: "Pane, burro e alici", description: "Alici del Cantabrico",
-      price: 18, category: "per-iniziare", image: "assets/images/per-iniziare/pane-burro-alici.jpg",
+      price: 18, allergens: [1, 4, 7], category: "per-iniziare", image: "assets/images/per-iniziare/pane-burro-alici.jpg",
       en: { name: "Bread, butter and anchovies", description: "Cantabrian anchovies" },
       placeholder: "https://images.unsplash.com/photo-1560174122-cac0c0bdacc6?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
-      id: "arancino", name: "Arancino della chef", description: "",
-      price: 7, category: "per-iniziare", image: "assets/images/per-iniziare/arancino.jpg",
+      id: "arancino", name: "Arancino della Chef", description: "",
+      price: 7, allergens: "chef", category: "per-iniziare", image: "assets/images/per-iniziare/arancino.jpg",
       en: { name: "Chef's arancino", description: "" },
       placeholder: "https://images.unsplash.com/photo-1688458296759-91020b4ff2ba?auto=format&fit=crop&w=800&h=600&q=70"
     },
@@ -197,27 +235,27 @@ window.BIVIO_MENU = Object.freeze({
     // --- Per Continuare
     {
       id: "mezze-maniche-norma", name: "Mezze maniche alla Norma", description: "",
-      price: 18, category: "per-continuare", image: "assets/images/per-continuare/mezze-maniche-norma.jpg",
+      price: 18, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/mezze-maniche-norma.jpg",
       en: { name: "Mezze maniche alla Norma", description: "" },
       placeholder: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "gnocchetti-pistacchio", name: "Gnocchetti al pesto di pistacchio",
       description: "Pistacchio di Bronte, guanciale e granella di pistacchio",
-      price: 20, category: "per-continuare", image: "assets/images/per-continuare/gnocchetti-pistacchio.jpg",
+      price: 20, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/gnocchetti-pistacchio.jpg",
       en: { name: "Gnocchetti with pistachio pesto", description: "Bronte pistachio, guanciale and crushed pistachios" },
       placeholder: "https://images.unsplash.com/photo-1584434127023-0c7135f8f18c?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "tonnarello", name: "Tonnarello", description: "Pomodorino confit e stracciatella",
-      price: 20, category: "per-continuare", image: "assets/images/per-continuare/tonnarello.jpg",
+      price: 20, allergens: [1, 3, 7], category: "per-continuare", image: "assets/images/per-continuare/tonnarello.jpg",
       en: { name: "Tonnarello", description: "Confit cherry tomatoes and stracciatella" },
       placeholder: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "piatto-del-giorno", name: "Piatto del giorno",
       description: "Chiedi al personale la proposta di oggi",
-      price: 20, category: "per-continuare", image: "assets/images/per-continuare/piatto-del-giorno.jpg",
+      price: null, allergens: "chef", category: "per-continuare", image: "assets/images/per-continuare/piatto-del-giorno.jpg",
       en: { name: "Dish of the day", description: "Ask our staff for today's special" },
       placeholder: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&h=600&q=70"
     },
@@ -225,25 +263,25 @@ window.BIVIO_MENU = Object.freeze({
     // --- Per Finire
     {
       id: "tagliata-pollo", name: "Tagliata di pollo", description: "Glassata al miele, senape e limone",
-      price: 25, category: "per-finire", image: "assets/images/per-finire/tagliata-pollo.jpg",
+      price: 25, allergens: [10, 12], category: "per-finire", image: "assets/images/per-finire/tagliata-pollo.jpg",
       en: { name: "Sliced chicken", description: "Glazed with honey, mustard and lemon" },
       placeholder: "https://images.unsplash.com/photo-1675984491214-609854c3ab8d?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "tartare-fassona", name: "Tartare di fassona / scottona", description: "Con mango e mayo-senape",
-      price: 22, category: "per-finire", image: "assets/images/per-finire/tartare-fassona.jpg",
+      price: 22, allergens: [3, 10, 12], frozen: true, category: "per-finire", image: "assets/images/per-finire/tartare-fassona.jpg",
       en: { name: "Fassona / Scottona beef tartare", description: "With mango and mustard mayo" },
       placeholder: "https://images.unsplash.com/photo-1770210627300-d4fa9b75dbb7?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "entrecote", name: "Entrecôte danese ai ferri", description: "Con patate al rosmarino",
-      price: 28, category: "per-finire", image: "assets/images/per-finire/entrecote.jpg",
+      price: 22, allergens: [12], category: "per-finire", image: "assets/images/per-finire/entrecote.jpg",
       en: { name: "Grilled Danish entrecôte", description: "With rosemary potatoes" },
       placeholder: "https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
-      id: "guancia-brasata", name: "Guancia brasata", description: "Con purè al parmigiano",
-      price: 28, category: "per-finire", image: "assets/images/per-finire/guancia-brasata.jpg",
+      id: "guancia-brasata", name: "Guancia brasata", description: "Con purè al Parmigiano",
+      price: 28, allergens: [7], category: "per-finire", image: "assets/images/per-finire/guancia-brasata.jpg",
       en: { name: "Braised beef cheek", description: "With Parmigiano mash" },
       placeholder: "https://images.unsplash.com/photo-1769773183948-d24e3c5a2b82?auto=format&fit=crop&w=800&h=600&q=70"
     },
@@ -251,19 +289,19 @@ window.BIVIO_MENU = Object.freeze({
     // --- Insieme A (contorni)
     {
       id: "broccoletti", name: "Broccoletti saltati", description: "",
-      price: 8, category: "insieme-a", image: "assets/images/insieme-a/broccoletti.jpg",
+      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/broccoletti.jpg",
       en: { name: "Sautéed broccoli rabe", description: "" },
       placeholder: "https://images.unsplash.com/photo-1732185370983-14bb41f68e47?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "cicoria", name: "Cicoria saltata", description: "",
-      price: 8, category: "insieme-a", image: "assets/images/insieme-a/cicoria.jpg",
+      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/cicoria.jpg",
       en: { name: "Sautéed chicory", description: "" },
       placeholder: "https://images.unsplash.com/photo-1732185370983-14bb41f68e47?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
-      id: "verdure-griglia", name: "Verdure di stagione alla griglia", description: "",
-      price: 8, category: "insieme-a", image: "assets/images/insieme-a/verdure-griglia.jpg",
+      id: "verdure-griglia", name: "Verdura di stagione alla griglia", description: "",
+      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/verdure-griglia.jpg",
       en: { name: "Grilled seasonal vegetables", description: "" },
       placeholder: "https://images.unsplash.com/photo-1625944227313-4f7f68e6b3fa?auto=format&fit=crop&w=800&h=600&q=70"
     },
@@ -271,13 +309,13 @@ window.BIVIO_MENU = Object.freeze({
     // --- In Dolcezza (dessert)
     {
       id: "cannolo", name: "Cannolo siciliano", description: "",
-      price: 8, category: "in-dolcezza", image: "assets/images/in-dolcezza/cannolo.jpg",
+      price: 8, allergens: [1, 3, 7], frozen: true, category: "in-dolcezza", image: "assets/images/in-dolcezza/cannolo.jpg",
       en: { name: "Sicilian cannolo", description: "" },
       placeholder: "https://images.unsplash.com/photo-1752079432431-43f97209f979?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "cheesecake", name: "Cheesecake", description: "",
-      price: 8, category: "in-dolcezza", image: "assets/images/in-dolcezza/cheesecake.jpg",
+      price: 8, allergens: [1, 3, 7], category: "in-dolcezza", image: "assets/images/in-dolcezza/cheesecake.jpg",
       en: { name: "Cheesecake", description: "" },
       placeholder: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&h=600&q=70"
     }
@@ -289,7 +327,7 @@ window.BIVIO_MENU = Object.freeze({
     { id: "traminer", name: "Traminer", winery: "Torre Rosazza", detail: null, vintage: null, abv: 12, organic: false, bottlePrice: 40, glassPrice: 8, category: "bianchi" },
     { id: "pecorino", name: "Pecorino", winery: "Tenuta Tre Gemme", detail: null, vintage: null, abv: 13, organic: true, bottlePrice: 45, glassPrice: 8, category: "bianchi" },
     { id: "ribolla-gialla", name: "Ribolla Gialla", winery: "Torre Rosazza", detail: null, vintage: null, abv: 13, organic: false, bottlePrice: 45, glassPrice: 8, category: "bianchi" },
-    { id: "gavi", name: "Gavi", winery: "Bricco dei Guazzi", detail: null, vintage: null, abv: 12.5, organic: false, bottlePrice: 50, glassPrice: 8, category: "bianchi" },
+    { id: "gavi", name: "Gavi", winery: "Bricco dei Guazzi", detail: null, vintage: null, abv: 12.5, organic: false, bottlePrice: 45, glassPrice: 8, category: "bianchi" },
 
     // --- Rossi
     { id: "valpolicella", name: "Valpolicella", winery: "Costa Arente", detail: "Valpantena Superiore", vintage: "2021", abv: 13.5, organic: false, bottlePrice: 45, glassPrice: 8, category: "rossi" },
@@ -298,11 +336,10 @@ window.BIVIO_MENU = Object.freeze({
     // --- Rosé
     { id: "bandolo-matassa", name: "Bandolo della Matassa", winery: "Cantina Le Macchie", detail: null, vintage: null, abv: 13, organic: false, bottlePrice: 55, glassPrice: 12, category: "rose" },
 
-    // --- Prosecco D.O.C.G.
+    // --- Prosecco DOC
     { id: "v8-valdobbiadene", name: "V8 Valdobbiadene Superiore Extra Dry", winery: "Metodo Martinelli", detail: null, vintage: null, abv: 11, organic: false, bottlePrice: 55, glassPrice: 8, category: "prosecco" },
     { id: "v8-extra-dry", name: "V8 Extra Dry", winery: null, detail: null, vintage: null, abv: 11, organic: false, bottlePrice: 50, glassPrice: 8, category: "prosecco" },
-    { id: "v8-brut", name: "V8 Brut", winery: null, detail: null, vintage: null, abv: 11.5, organic: false, bottlePrice: 45, glassPrice: 8, category: "prosecco" },
-    { id: "strappo-regola", name: "Strappo alla Regola", winery: "Cantina Le Macchie", detail: "Millesimato Rosé", vintage: null, abv: 12.5, organic: false, bottlePrice: 60, glassPrice: 13, category: "prosecco", en: { detail: "Vintage Rosé" } },
+    { id: "v8-brut", name: "V8 Brut", winery: null, detail: null, vintage: null, abv: 11, organic: false, bottlePrice: 45, glassPrice: 8, category: "prosecco" },
 
     // --- Bollicine
     { id: "franciacorta-barone", name: "Franciacorta", winery: "Barone di Erbusco", detail: null, vintage: null, abv: 12.5, organic: false, bottlePrice: 65, glassPrice: 15, category: "bollicine" },
@@ -329,7 +366,7 @@ window.BIVIO_MENU = Object.freeze({
     // --- Premium Spirits & Tonic
     { id: "oban-14", name: "Oban 14 anni", kind: "Whisky", price: 15, category: "premium", en: { name: "Oban 14 Year Old" } },
     { id: "talisker-10", name: "Talisker 10 anni", kind: "Whisky", price: 15, category: "premium", en: { name: "Talisker 10 Year Old" } },
-    { id: "zacapa-23", name: "Zacapa 23", kind: "Rum", price: 17, category: "premium" },
+    { id: "zacapa-23", name: "Zacapa", kind: "Rum", price: 17, category: "premium" },
     { id: "beluga-tonic", name: "Beluga Noble Tonic", kind: "Vodka", price: 17, category: "premium" },
     { id: "belvedere-tonic", name: "Belvedere Tonic", kind: "Vodka", price: 15, category: "premium" },
     { id: "grey-goose-tonic", name: "Grey Goose Tonic", kind: "Vodka", price: 15, category: "premium" },

@@ -128,6 +128,7 @@
 
   // ---------------------------------------------------------------- Stato
   var activeSectionId = null;
+  var NAV_TARGETS = ".category, .menu-info"; // blocchi che hanno una chip nella subnav e vengono osservati dallo scrollspy
   var spyObserver = null;
 
   function findSection(id) {
@@ -193,19 +194,105 @@
     img.src = dish.image;
   }
 
+  // ---------------------------------------------------------------- Allergeni
+  function findAllergen(id) {
+    var list = MENU.allergens || [];
+    for (var i = 0; i < list.length; i++) {
+      if (list[i].id === id) return list[i];
+    }
+    return null;
+  }
+
+  /** Icona "i" line-art in un cerchio (decorativa). size in px. */
+  function buildInfoIcon(size) {
+    var s = svg("svg", { viewBox: "0 0 24 24", width: String(size), height: String(size), "class": "info-icon", fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" });
+    s.appendChild(svg("circle", { cx: "12", cy: "12", r: "10" }));
+    s.appendChild(svg("path", { d: "M12 11v5.500M12 7.800v.01" }));
+    return s;
+  }
+
+  /**
+   * Allergeni del piatto. `allergens`: array di id = presenti; [] o assente = nulla;
+   * "chef" = comunicati separatamente. Restituisce null se non c'è nulla da mostrare.
+   * Sotto il piatto: solo cerchietti numerati (aria-hidden) dentro un link discreto alla legenda;
+   * il testo per screen reader ("Allergeni: Glutine, Uova") è in uno span visually-hidden.
+   */
+  function renderDishAllergens(d) {
+    var a = d.allergens;
+    if (a === "chef") {
+      return el("p", { class: "dish__allergens dish__allergens--chef", text: t("allergensChef") });
+    }
+    if (!Array.isArray(a) || !a.length) return null;
+    var names = [];
+    var circles = [];
+    a.slice().sort(function (x, y) { return x - y; }).forEach(function (id) {
+      var al = findAllergen(id);
+      if (!al) return;
+      var label = tr(al, "name");
+      names.push(label);
+      circles.push(el("span", { class: "dish__allergen", "aria-hidden": "true", "data-allergen": String(id), title: id + " · " + label, text: String(id) }));
+    });
+    if (!circles.length) return null;
+    var link = el("a", { class: "dish__allergens-link", href: "#cat-allergeni" },
+      [el("span", { class: "visually-hidden", text: t("allergensLabel") + ": " + names.join(", ") })].concat(circles));
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      // Stesso percorso delle chip della subnav: scroll alla legenda + hash sezione/categoria
+      scrollToCategory("allergeni");
+      updateHash(activeSectionId + "/allergeni");
+    });
+    return el("p", { class: "dish__allergens" }, [link]);
+  }
+
+  /**
+   * Pannello informativo sugli allergeni (solo sezione Cucina, dopo l'ultima categoria):
+   * non è una categoria del menu, ma mantiene id "cat-allergeni" per subnav e scrollspy.
+   * Restituisce un frammento: divisore + pannello.
+   */
+  function renderAllergenLegend() {
+    var list = MENU.allergens || [];
+    if (!list.length) return null;
+    var frag = document.createDocumentFragment();
+    frag.appendChild(el("div", { class: "menu-divider", "aria-hidden": "true" }, [el("span", { class: "menu-divider__gem" })]));
+    frag.appendChild(el("aside", { class: "menu-info", id: "cat-allergeni", "aria-labelledby": "title-allergeni", "data-nav-label": t("allergensTitle") }, [
+      el("div", { class: "menu-info__head" }, [
+        buildInfoIcon(20),
+        el("h2", { class: "menu-info__title", id: "title-allergeni", text: t("allergensInfoTitle") })
+      ]),
+      el("ol", { class: "allergen-list" }, list.map(function (al) {
+        return el("li", { class: "allergen", "data-allergen": String(al.id) }, [
+          el("span", { class: "allergen__num", "aria-hidden": "true", text: String(al.id) }),
+          el("span", { class: "allergen__name", text: tr(al, "name") })
+        ]);
+      })),
+      el("p", { class: "allergen-note" }, [el("span", { class: "allergen-note__mark", "aria-hidden": "true", text: "*" }), " " + t("frozenNote")]),
+      el("p", { class: "allergen-ask", text: t("allergyAsk") })
+    ]));
+    return frag;
+  }
+
   // ---------------------------------------------------------------- Renderer
   function renderDish(d, i) {
     var img = el("img", { alt: tr(d, "name"), loading: "lazy", decoding: "async", width: "800", height: "600" });
     var figure = el("figure", { class: "dish__media" }, [img]);
     attachImageFallback(img, figure, d);
 
+    // Nome + eventuale asterisco "prodotto gelo"
+    var nameEl = el("h3", { class: "dish__name", text: tr(d, "name") });
+    if (d.frozen) {
+      nameEl.appendChild(el("span", { class: "dish__frozen", title: t("frozenMark"), "aria-label": t("frozenMark"), text: "*" }));
+    }
+    // Prezzo assente (price: null): l'elemento non viene creato
+    var hasPrice = typeof d.price === "number";
     var head = el("div", { class: "dish__head" }, [
-      el("h3", { class: "dish__name", text: tr(d, "name") }),
-      el("data", { class: "dish__price", value: String(d.price), text: formatPrice(d.price) })
+      nameEl,
+      hasPrice ? el("data", { class: "dish__price", value: String(d.price), text: formatPrice(d.price) }) : null
     ]);
     var body = el("div", { class: "dish__body" }, [head]);
     var desc = tr(d, "description");
     if (desc) body.appendChild(el("p", { class: "dish__desc", text: desc }));
+    var allergenLine = renderDishAllergens(d);
+    if (allergenLine) body.appendChild(allergenLine);
 
     var article = el("article", { class: "dish" }, [figure, body]);
     article.style.setProperty("--i", String(Math.min(i, 12)));
@@ -260,7 +347,7 @@
       el("h2", { class: "category__title", id: titleId, text: tr(cat, "label") }),
       tr(cat, "subtitle") ? el("p", { class: "category__subtitle", text: tr(cat, "subtitle") }) : null
     ]);
-    var wrapper = el("section", { class: "category category--" + section.type, id: "cat-" + cat.id, "aria-labelledby": titleId }, [heading]);
+    var wrapper = el("section", { class: "category category--" + section.type, id: "cat-" + cat.id, "aria-labelledby": titleId, "data-nav-label": tr(cat, "label") }, [heading]);
     wrapper.style.setProperty("--i", String(Math.min(index, 12)));
 
     if (section.type === "food") {
@@ -283,6 +370,11 @@
       var node = renderCategory(section, cat, index);
       if (node) frag.appendChild(node);
     });
+    // Blocco extra della Cucina: legenda allergeni dopo l'ultima categoria
+    if (section.type === "food") {
+      var legend = renderAllergenLegend();
+      if (legend) frag.appendChild(legend);
+    }
     return frag;
   }
 
@@ -330,14 +422,19 @@
   // ---------------------------------------------------------------- Subnav + scrollspy
   function renderSubnav(section) {
     subnavEl.textContent = "";
-    section.categories.forEach(function (cat) {
-      if (!document.getElementById("cat-" + cat.id)) return; // categorie vuote non renderizzate
-      var chip = el("a", { class: "chip", href: "#cat-" + cat.id, "data-cat": cat.id, text: tr(cat, "label") });
+    // Una chip per ogni blocco navigabile effettivamente renderizzato: categorie (.category) + pannelli informativi (.menu-info)
+    Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
+      var catId = node.id.replace(/^cat-/, "");
+      var isInfo = node.classList.contains("menu-info");
+      var label = node.getAttribute("data-nav-label") || catId;
+      var chip = el("a", { class: isInfo ? "chip chip--info" : "chip", href: "#" + node.id, "data-cat": catId }, isInfo ? [buildInfoIcon(12), label] : [label]);
       chip.addEventListener("click", function (e) {
         e.preventDefault();
-        scrollToCategory(cat.id);
-        updateHash(section.id + "/" + cat.id);
+        scrollToCategory(catId);
+        updateHash(section.id + "/" + catId);
       });
+      // Filetto verticale che stacca le chip informative da quelle delle categorie
+      if (isInfo && subnavEl.children.length) subnavEl.appendChild(el("span", { class: "subnav__sep", "aria-hidden": "true" }));
       subnavEl.appendChild(chip);
     });
   }
@@ -365,7 +462,7 @@
     if (!("IntersectionObserver" in window)) return;
 
     var visible = {};
-    var cats = mainEl.querySelectorAll(".category");
+    var cats = mainEl.querySelectorAll(NAV_TARGETS);
     var order = Array.prototype.map.call(cats, function (c) { return c.id; });
 
     spyObserver = new IntersectionObserver(function (entries) {
