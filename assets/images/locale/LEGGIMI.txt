@@ -25,3 +25,6 @@ FORMATO CONSIGLIATO
 
 Quando hai caricato le foto, avvisami: le integro nel sito
 (per esempio nell'intestazione, in una galleria o come sfondo).
+
+Dopo aver aggiunto foto, lanciare: python tools/ottimizza-foto.py (oppure chiedere a Claude).
+Le versioni ottimizzate finiscono in web/ e sono quelle usate dalla galleria del sito.

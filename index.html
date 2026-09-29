@@ -53,6 +53,15 @@
     <noscript><p class="menu__notice">Per visualizzare il menu è necessario abilitare JavaScript.</p></noscript>
   </main>
 
+  <!-- Galleria "Il locale": sempre visibile, popolata da script.js (dati in menu-data.js -> gallery) -->
+  <section class="gallery" id="il-locale" aria-labelledby="gallery-title" hidden>
+    <header class="gallery__header">
+      <h2 class="gallery__title" id="gallery-title" data-i18n="galleryTitle">Il locale</h2>
+      <p class="gallery__subtitle" data-i18n="gallerySubtitle">Cucina a vista, terrazzino e tavoli per stare insieme</p>
+    </header>
+    <div class="gallery__grid"></div>
+  </section>
+
   <footer class="site-footer">
     <p data-i18n="allergens">Per allergie e intolleranze chiedi al nostro personale.</p>
     <p class="site-footer__copy">© <span id="year">2025</span> Bivio Bistrot · Roma</p>
@@ -77,6 +86,22 @@
           <span class="lang-modal__hint">Welcome</span>
         </button>
       </div>
+    </div>
+  </dialog>
+
+  <!-- Lightbox della galleria (contenuto gestito da script.js) -->
+  <dialog class="lightbox" aria-label="Il locale" data-i18n-aria="galleryTitle">
+    <div class="lightbox__inner">
+      <button type="button" class="lightbox__btn lightbox__close" aria-label="Chiudi" data-i18n-aria="close"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      <button type="button" class="lightbox__btn lightbox__prev" aria-label="Foto precedente" data-i18n-aria="prev"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>
+      <button type="button" class="lightbox__btn lightbox__next" aria-label="Foto successiva" data-i18n-aria="next"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 5l7 7-7 7"/></svg></button>
+      <figure class="lightbox__figure">
+        <img class="lightbox__img" alt="" draggable="false">
+        <figcaption class="lightbox__caption">
+          <span class="lightbox__text"></span>
+          <span class="lightbox__count" aria-live="polite"></span>
+        </figcaption>
+      </figure>
     </div>
   </dialog>
 

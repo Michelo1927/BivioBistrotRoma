@@ -458,6 +458,135 @@
     });
   }
 
+  // ---------------------------------------------------------------- Galleria "Il locale" + lightbox
+  var galleryEl = document.getElementById("il-locale");
+  var galleryGridEl = galleryEl ? galleryEl.querySelector(".gallery__grid") : null;
+  var lightboxEl = document.querySelector(".lightbox");
+  var lbState = { index: 0, open: false };
+  var lbReady = false;
+
+  function galleryItems() {
+    return (MENU.gallery && MENU.gallery.length) ? MENU.gallery : [];
+  }
+
+  /** Ridisegna la griglia nella lingua corrente. Nascosta se non ci sono foto. */
+  function renderGallery() {
+    if (!galleryEl || !galleryGridEl) return;
+    var items = galleryItems();
+    galleryEl.hidden = !items.length;
+    galleryGridEl.textContent = "";
+    items.forEach(function (g, i) {
+      var caption = tr(g, "caption") || "";
+      var img = el("img", {
+        src: g.srcSmall || g.src, srcset: g.srcSmall ? g.srcSmall + " 800w, " + g.src + " 1600w" : null,
+        sizes: g.wide ? "(min-width: 1000px) 50vw, 100vw" : "(min-width: 800px) 33vw, 50vw", loading: "lazy", decoding: "async",
+        alt: "", width: g.width ? String(g.width) : null, height: g.height ? String(g.height) : null
+      });
+      var btn = el("button", {
+        class: "gallery__item" + (g.wide ? " gallery__item--wide" : ""), type: "button",
+        "aria-label": t("openPhoto") + ": " + caption
+      }, [img, el("span", { class: "gallery__caption", text: caption })]);
+      btn.addEventListener("click", function () { openLightbox(i); });
+      galleryGridEl.appendChild(btn);
+    });
+    if (lbState.open) showPhoto(lbState.index, true); // cambio lingua con lightbox aperta
+  }
+
+  /** Mostra la foto i nella lightbox (ciclico). instant = senza dissolvenza. */
+  function showPhoto(i, instant) {
+    var items = galleryItems();
+    if (!items.length || !lightboxEl) return;
+    var n = items.length;
+    lbState.index = ((i % n) + n) % n;
+    var g = items[lbState.index];
+    var img = lightboxEl.querySelector(".lightbox__img");
+    var caption = tr(g, "caption") || "";
+    lightboxEl.querySelector(".lightbox__text").textContent = caption;
+    lightboxEl.querySelector(".lightbox__count").textContent = (lbState.index + 1) + " / " + n;
+    img.alt = tr(g, "alt") || caption;
+    if (img.getAttribute("src") !== g.src) {
+      if (!instant) img.classList.add("is-loading");
+      img.onload = img.onerror = function () { img.classList.remove("is-loading"); };
+      img.src = g.src;
+      if (img.complete) img.classList.remove("is-loading");
+    }
+    // Precarica le vicine per una navigazione fluida
+    [1, -1].forEach(function (d) {
+      var nb = items[(lbState.index + d + n) % n];
+      if (nb) new Image().src = nb.src;
+    });
+  }
+
+  function openLightbox(i) {
+    if (!lightboxEl) return;
+    var items = galleryItems();
+    if (typeof lightboxEl.showModal !== "function") {
+      // Fallback: nessun <dialog> -> la foto si apre in una nuova scheda
+      window.open(items[i].src, "_blank", "noopener");
+      return;
+    }
+    setupLightbox();
+    lbState.index = i;
+    lbState.open = true;
+    lightboxEl.querySelector(".lightbox__img").removeAttribute("src");
+    document.documentElement.classList.add("is-modal-open");
+    try { lightboxEl.showModal(); } catch (e) {
+      lbState.open = false;
+      document.documentElement.classList.remove("is-modal-open");
+      window.open(items[i].src, "_blank", "noopener");
+      return;
+    }
+    showPhoto(i, true);
+    lightboxEl.querySelector(".lightbox__close").focus({ preventScroll: true });
+  }
+
+  /** Listener della lightbox: registrati una sola volta, alla prima apertura. */
+  function setupLightbox() {
+    if (lbReady) return;
+    lbReady = true;
+    var root = document.documentElement;
+    lightboxEl.querySelector(".lightbox__close").addEventListener("click", function () { lightboxEl.close(); });
+    lightboxEl.querySelector(".lightbox__prev").addEventListener("click", function () { showPhoto(lbState.index - 1); });
+    lightboxEl.querySelector(".lightbox__next").addEventListener("click", function () { showPhoto(lbState.index + 1); });
+
+    // Alla chiusura (Esc, X o backdrop): sblocca lo scroll e riporta il focus al bottone che ha aperto
+    lightboxEl.addEventListener("close", function () {
+      lbState.open = false;
+      root.classList.remove("is-modal-open");
+      var btns = galleryGridEl ? galleryGridEl.querySelectorAll(".gallery__item") : [];
+      if (btns[lbState.index]) btns[lbState.index].focus({ preventScroll: true });
+    });
+
+    lightboxEl.addEventListener("keydown", function (e) {
+      if (e.key === "ArrowLeft") { e.preventDefault(); showPhoto(lbState.index - 1); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); showPhoto(lbState.index + 1); }
+    });
+
+    // Swipe orizzontale (touch/penna); soglia 40px, prevale l'asse orizzontale
+    var startX = null, startY = 0, swiped = false;
+    lightboxEl.addEventListener("pointerdown", function (e) {
+      if (e.pointerType === "mouse") return;
+      startX = e.clientX; startY = e.clientY; swiped = false;
+    });
+    lightboxEl.addEventListener("pointerup", function (e) {
+      if (startX === null) return;
+      var dx = e.clientX - startX, dy = e.clientY - startY;
+      startX = null;
+      if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) {
+        swiped = true;
+        showPhoto(lbState.index + (dx < 0 ? 1 : -1));
+      }
+    });
+    lightboxEl.addEventListener("pointercancel", function () { startX = null; });
+
+    // Click sullo sfondo (fuori da foto, didascalia e bottoni) chiude
+    lightboxEl.addEventListener("click", function (e) {
+      if (swiped) { swiped = false; return; }
+      if (e.target.closest("button, .lightbox__img, .lightbox__caption")) return;
+      lightboxEl.close();
+    });
+  }
+
   // ---------------------------------------------------------------- Hash + avvio
   function syncFromHash(initial) {
     var parsed = parseHash();
@@ -531,6 +660,7 @@
       } catch (e) { /* non critico */ }
     }
     applyStaticText();
+    renderGallery();
     if (opts.initial || !changed) return;
     var y = window.scrollY;
     renderTabs();

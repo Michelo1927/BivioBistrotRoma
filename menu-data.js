@@ -52,7 +52,7 @@ window.BIVIO_MENU = Object.freeze({
     // Link di contatto: incolla qui gli URL definitivi. Stringa vuota = pulsante mostrato come "in arrivo" (non cliccabile).
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
-      whatsapp: ""   // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
+      whatsapp: "https://wa.me/3780670878"   // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
     }
   },
 
@@ -66,7 +66,9 @@ window.BIVIO_MENU = Object.freeze({
       langLabel: "Lingua", unavailable: "Il menu non è al momento disponibile. Riprova tra qualche istante.",
       pageTitle: "Menu — Bivio Bistrot Roma",
       description: "Il menu di Bivio Bistrot a Roma: cucina di stagione, carta dei vini e distillati.",
-      sections: "Sezioni"
+      sections: "Sezioni",
+      galleryTitle: "Il locale", gallerySubtitle: "Cucina a vista, terrazzino e tavoli per stare insieme",
+      close: "Chiudi", prev: "Foto precedente", next: "Foto successiva", openPhoto: "Apri foto"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -76,7 +78,9 @@ window.BIVIO_MENU = Object.freeze({
       langLabel: "Language", unavailable: "The menu is currently unavailable. Please try again shortly.",
       pageTitle: "Menu — Bivio Bistrot Rome",
       description: "The Bivio Bistrot menu in Rome: seasonal kitchen, wine list and spirits.",
-      sections: "Sections"
+      sections: "Sections",
+      galleryTitle: "The place", gallerySubtitle: "Open kitchen, terrace and tables to gather around",
+      close: "Close", prev: "Previous photo", next: "Next photo", openPhoto: "Open photo"
     }
   },
 
@@ -109,6 +113,49 @@ window.BIVIO_MENU = Object.freeze({
         { id: "whiskey", label: "Whiskey", subtitle: "Tradizionali", en: { label: "Whiskey", subtitle: "Classics" } },
         { id: "premium", label: "Premium Spirits & Tonic", en: { label: "Premium Spirits & Tonic" } }
       ]
+    }
+  ],
+
+  // ------------------------------------------------------------------ GALLERIA "IL LOCALE"
+  // COME AGGIUNGERE UNA FOTO: metti l'originale in assets/images/locale/{esterni,interni,dettagli}/,
+  // lancia `python tools/ottimizza-foto.py` (crea i derivati in locale/web/), poi aggiungi qui un oggetto:
+  // { id, src (-1600), srcSmall (-800), width, height (del -1600), alt, caption, en: { alt, caption }, wide?: true }.
+  // `wide: true` fa occupare due colonne (solo per foto orizzontali). Ordine = ordine in pagina.
+  gallery: [
+    {
+      id: "esterni-terrazzino", src: "assets/images/locale/web/esterni-terrazzino-1600.jpg", srcSmall: "assets/images/locale/web/esterni-terrazzino-800.jpg",
+      width: 1200, height: 1600, alt: "Tavolo apparecchiato sul terrazzino tra le piante", caption: "Il terrazzino",
+      en: { alt: "Table set on the terrace among the plants", caption: "The terrace" }
+    },
+    {
+      id: "interni-cucina-a-vista-3", src: "assets/images/locale/web/interni-cucina-a-vista-3-1600.jpg", srcSmall: "assets/images/locale/web/interni-cucina-a-vista-3-800.jpg",
+      width: 1600, height: 1200, alt: "Bancone in mosaico davanti alla cucina a vista", caption: "La cucina a vista",
+      en: { alt: "Mosaic counter in front of the open kitchen", caption: "The open kitchen" }, wide: true
+    },
+    {
+      id: "interni-tavolo-con-piatti", src: "assets/images/locale/web/interni-tavolo-con-piatti-1600.jpg", srcSmall: "assets/images/locale/web/interni-tavolo-con-piatti-800.jpg",
+      width: 1200, height: 1600, alt: "Due piatti di pasta al pomodoro su un tavolo apparecchiato", caption: "A tavola",
+      en: { alt: "Two plates of tomato pasta on a set table", caption: "At the table" }
+    },
+    {
+      id: "interni-cucina-a-vista-2", src: "assets/images/locale/web/interni-cucina-a-vista-2-1600.jpg", srcSmall: "assets/images/locale/web/interni-cucina-a-vista-2-800.jpg",
+      width: 1200, height: 1600, alt: "Sgabelli al bancone con la cucina alle spalle", caption: "Il bancone",
+      en: { alt: "Stools at the counter with the kitchen behind", caption: "The counter" }
+    },
+    {
+      id: "interni-tavoli-al-buio", src: "assets/images/locale/web/interni-tavoli-al-buio-1600.jpg", srcSmall: "assets/images/locale/web/interni-tavoli-al-buio-800.jpg",
+      width: 1200, height: 1600, alt: "Tavoli apparecchiati alla luce delle candele", caption: "La sera",
+      en: { alt: "Tables set by candlelight", caption: "In the evening" }
+    },
+    {
+      id: "interni-tavolo-con-piatto", src: "assets/images/locale/web/interni-tavolo-con-piatto-1600.jpg", srcSmall: "assets/images/locale/web/interni-tavolo-con-piatto-800.jpg",
+      width: 1200, height: 1600, alt: "Pasta al pomodoro con formaggio grattugiato", caption: "Dalla cucina",
+      en: { alt: "Tomato pasta with grated cheese", caption: "From the kitchen" }
+    },
+    {
+      id: "interni-cucina-a-vista", src: "assets/images/locale/web/interni-cucina-a-vista-1600.jpg", srcSmall: "assets/images/locale/web/interni-cucina-a-vista-800.jpg",
+      width: 1200, height: 1600, alt: "Piatto servito sul bancone davanti alla cucina", caption: "Al bancone",
+      en: { alt: "Dish served at the counter in front of the kitchen", caption: "At the counter" }
     }
   ],
 
