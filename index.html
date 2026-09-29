@@ -35,8 +35,9 @@
     </h1>
     <p class="site-header__overline">Roma</p>
     <div class="site-header__actions">
-      <a class="pill-link" data-link="maps" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.300"/></svg><span data-i18n="maps">Come arrivare</span></a>
+      <a class="pill-link" data-link="maps" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.300"/></svg><span data-i18n="maps">Mappa</span></a>
       <a class="pill-link" data-link="whatsapp" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1.300-4.100A8 8 0 1 1 8.200 18.800L4 20Z"/><path d="M9.200 9.300c.2 2.800 2.700 5 5.500 5.300l1.100-1.400-2-1-.9.700a4 4 0 0 1-1.900-1.900l.7-.9-1-2-1.500 1.200Z"/></svg><span data-i18n="whatsapp">WhatsApp</span></a>
+      <button type="button" class="pill-link pill-link--gallery" data-i18n-aria="galleryOpen" aria-label="Guarda le foto del locale" hidden><img class="pill-link__thumb" src="assets/images/locale/web/pill-thumb.jpg" alt="" width="48" height="48"><span data-i18n="galleryPill">Il locale</span></button>
     </div>
     <span class="site-header__ornament" aria-hidden="true"></span>
   </header>
@@ -52,15 +53,6 @@
   <main id="menu" class="menu" tabindex="-1">
     <noscript><p class="menu__notice">Per visualizzare il menu è necessario abilitare JavaScript.</p></noscript>
   </main>
-
-  <!-- Galleria "Il locale": sempre visibile, popolata da script.js (dati in menu-data.js -> gallery) -->
-  <section class="gallery" id="il-locale" aria-labelledby="gallery-title" hidden>
-    <header class="gallery__header">
-      <h2 class="gallery__title" id="gallery-title" data-i18n="galleryTitle">Il locale</h2>
-      <p class="gallery__subtitle" data-i18n="gallerySubtitle">Cucina a vista, terrazzino e tavoli per stare insieme</p>
-    </header>
-    <div class="gallery__grid"></div>
-  </section>
 
   <footer class="site-footer">
     <p data-i18n="allergens">Per allergie e intolleranze chiedi al nostro personale.</p>
@@ -90,7 +82,7 @@
   </dialog>
 
   <!-- Lightbox della galleria (contenuto gestito da script.js) -->
-  <dialog class="lightbox" aria-label="Il locale" data-i18n-aria="galleryTitle">
+  <dialog class="lightbox" aria-label="Il locale" data-i18n-aria="galleryPill">
     <div class="lightbox__inner">
       <button type="button" class="lightbox__btn lightbox__close" aria-label="Chiudi" data-i18n-aria="close"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
       <button type="button" class="lightbox__btn lightbox__prev" aria-label="Foto precedente" data-i18n-aria="prev"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>

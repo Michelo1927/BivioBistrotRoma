@@ -122,6 +122,18 @@ data { font-variant-numeric: tabular-nums; }
   transition: border-color .2s var(--ease);
 }
 .pill-link svg { flex: 0 0 auto; color: var(--accent); }
+/* Pillola "Il locale": e' un <button>, con miniatura tonda al posto dell'icona */
+.pill-link--gallery { cursor: pointer; }
+.pill-link--gallery[hidden] { display: none; }
+.pill-link--gallery:hover { border-color: var(--accent); }
+.pill-link__thumb {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
 a.pill-link[href]:hover { border-color: var(--accent); }
 .pill-link[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 
@@ -698,101 +710,6 @@ html.is-modal-open { overflow: hidden; }
   .lang-modal__choices { flex-direction: column; }
 }
 
-/* ---------- Galleria "Il locale" ---------- */
-.gallery {
-  max-width: var(--maxw);
-  margin: 0 auto;
-  padding: clamp(24px, 5vw, 48px) var(--gutter) clamp(48px, 9vw, 96px);
-  border-top: 1px solid var(--line);
-  scroll-margin-top: calc(var(--nav-h) + 16px);
-}
-.gallery[hidden] { display: none; }
-.gallery__header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: .9rem;
-  padding-bottom: .6rem;
-  margin-bottom: clamp(20px, 3vw, 32px);
-  border-bottom: 1px solid var(--line);
-}
-.gallery__title {
-  font-family: var(--serif);
-  font-weight: 500;
-  font-size: clamp(1.75rem, 4.5vw, 2.5rem);
-  line-height: 1.15;
-}
-.gallery__subtitle {
-  font-family: var(--serif);
-  font-style: italic;
-  font-weight: 500;
-  font-size: 1.15rem;
-  color: var(--muted);
-}
-
-.gallery__grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-auto-flow: dense;
-  gap: 8px;
-}
-@media (min-width: 600px) {
-  .gallery__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-}
-@media (min-width: 1000px) {
-  .gallery__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
-}
-
-.gallery__item {
-  position: relative;
-  display: block;
-  min-width: 0;
-  aspect-ratio: 3 / 4;
-  padding: 0;
-  border: 0;
-  overflow: hidden;
-  border-radius: var(--radius);
-  background: var(--accent-soft);
-}
-/* L'immagine è fuori dal flusso: le dimensioni della cella non dipendono dai suoi width/height */
-.gallery__item img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform .6s var(--ease);
-}
-/* Foto orizzontale: due colonne. Mobile: proporzione propria, dalla 3a colonna in su
-   l'altezza segue le celle vicine della stessa riga (3/4) */
-.gallery__item--wide { grid-column: span 2; aspect-ratio: 4 / 3; }
-@media (min-width: 600px) {
-  .gallery__item--wide { aspect-ratio: auto; height: 100%; }
-}
-
-.gallery__caption {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 1.6rem .75rem .6rem;
-  background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, .45));
-  color: #fff;
-  font-size: .6875rem;
-  font-weight: 500;
-  letter-spacing: .1em;
-  text-transform: uppercase;
-  text-align: left;
-  line-height: 1.3;
-  pointer-events: none;
-}
-@media (hover: hover) {
-  .gallery__caption { opacity: 0; transition: opacity .3s var(--ease); }
-  .gallery__item:hover img { transform: scale(1.03); }
-  .gallery__item:hover .gallery__caption,
-  .gallery__item:focus-visible .gallery__caption { opacity: 1; }
-}
-
 /* ---------- Lightbox ---------- */
 .lightbox {
   width: 100vw;
@@ -896,9 +813,15 @@ html.is-modal-open { overflow: hidden; }
   .dish__name { font-size: 1.25rem; }
 }
 
+/* ---------- Header: le tre pill restano su una riga sotto i 400px ---------- */
+@media (max-width: 399.98px) {
+  .site-header__actions { gap: .35rem; }
+  .pill-link { gap: .35rem; padding: .55rem .7rem; font-size: .78rem; letter-spacing: 0; }
+}
+
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .site-header__actions, .lang-modal, .gallery, .lightbox { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .site-header__actions, .lang-modal, .lightbox { display: none !important; }
   body, .site-header { background: #fff; }
   .site-header__logo { width: 200px; }
   .site-header { padding: 0 0 1rem; }

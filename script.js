@@ -459,37 +459,38 @@
   }
 
   // ---------------------------------------------------------------- Galleria "Il locale" + lightbox
-  var galleryEl = document.getElementById("il-locale");
-  var galleryGridEl = galleryEl ? galleryEl.querySelector(".gallery__grid") : null;
+  var galleryPillEl = document.querySelector(".pill-link--gallery");
   var lightboxEl = document.querySelector(".lightbox");
   var lbState = { index: 0, open: false };
   var lbReady = false;
+  var lbOpener = null; // elemento che ha aperto la lightbox: riceve il focus alla chiusura
 
   function galleryItems() {
     return (MENU.gallery && MENU.gallery.length) ? MENU.gallery : [];
   }
 
-  /** Ridisegna la griglia nella lingua corrente. Nascosta se non ci sono foto. */
-  function renderGallery() {
-    if (!galleryEl || !galleryGridEl) return;
-    var items = galleryItems();
-    galleryEl.hidden = !items.length;
-    galleryGridEl.textContent = "";
-    items.forEach(function (g, i) {
-      var caption = tr(g, "caption") || "";
-      var img = el("img", {
-        src: g.srcSmall || g.src, srcset: g.srcSmall ? g.srcSmall + " 800w, " + g.src + " 1600w" : null,
-        sizes: g.wide ? "(min-width: 1000px) 50vw, 100vw" : "(min-width: 800px) 33vw, 50vw", loading: "lazy", decoding: "async",
-        alt: "", width: g.width ? String(g.width) : null, height: g.height ? String(g.height) : null
-      });
-      var btn = el("button", {
-        class: "gallery__item" + (g.wide ? " gallery__item--wide" : ""), type: "button",
-        "aria-label": t("openPhoto") + ": " + caption
-      }, [img, el("span", { class: "gallery__caption", text: caption })]);
-      btn.addEventListener("click", function () { openLightbox(i); });
-      galleryGridEl.appendChild(btn);
-    });
+  /** Aggiorna la pillola "Il locale" (nascosta se non ci sono foto) e la lightbox aperta al cambio lingua. */
+  function syncGallery() {
+    if (galleryPillEl) galleryPillEl.hidden = !galleryItems().length;
     if (lbState.open) showPhoto(lbState.index, true); // cambio lingua con lightbox aperta
+  }
+
+  /** Pillola: click apre la prima foto; la prima foto grande viene precaricata una sola volta. */
+  function setupGalleryPill() {
+    if (!galleryPillEl) return;
+    var preloaded = false;
+    function preload() {
+      if (preloaded) return;
+      var items = galleryItems();
+      if (!items.length) return;
+      preloaded = true;
+      new Image().src = items[0].src;
+    }
+    galleryPillEl.addEventListener("pointerenter", preload);
+    galleryPillEl.addEventListener("focus", preload);
+    galleryPillEl.addEventListener("click", function () {
+      if (galleryItems().length) openLightbox(0);
+    });
   }
 
   /** Mostra la foto i nella lightbox (ciclico). instant = senza dissolvenza. */
@@ -526,6 +527,7 @@
       return;
     }
     setupLightbox();
+    lbOpener = document.activeElement;
     lbState.index = i;
     lbState.open = true;
     lightboxEl.querySelector(".lightbox__img").removeAttribute("src");
@@ -549,12 +551,14 @@
     lightboxEl.querySelector(".lightbox__prev").addEventListener("click", function () { showPhoto(lbState.index - 1); });
     lightboxEl.querySelector(".lightbox__next").addEventListener("click", function () { showPhoto(lbState.index + 1); });
 
-    // Alla chiusura (Esc, X o backdrop): sblocca lo scroll e riporta il focus al bottone che ha aperto
+    // Alla chiusura (Esc, X o backdrop): sblocca lo scroll e riporta il focus all'elemento che ha aperto
     lightboxEl.addEventListener("close", function () {
       lbState.open = false;
       root.classList.remove("is-modal-open");
-      var btns = galleryGridEl ? galleryGridEl.querySelectorAll(".gallery__item") : [];
-      if (btns[lbState.index]) btns[lbState.index].focus({ preventScroll: true });
+      if (lbOpener && document.contains(lbOpener) && typeof lbOpener.focus === "function") {
+        lbOpener.focus({ preventScroll: true });
+      }
+      lbOpener = null;
     });
 
     lightboxEl.addEventListener("keydown", function (e) {
@@ -586,6 +590,8 @@
       lightboxEl.close();
     });
   }
+
+  setupGalleryPill();
 
   // ---------------------------------------------------------------- Hash + avvio
   function syncFromHash(initial) {
@@ -660,7 +666,7 @@
       } catch (e) { /* non critico */ }
     }
     applyStaticText();
-    renderGallery();
+    syncGallery();
     if (opts.initial || !changed) return;
     var y = window.scrollY;
     renderTabs();

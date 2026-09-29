@@ -62,24 +62,24 @@ window.BIVIO_MENU = Object.freeze({
       tagline: "Cucina di stagione, vini e distillati", skip: "Vai al menu", navLabel: "Sezioni del menu",
       categoriesLabel: "Categorie", glass: "Calice", bottle: "Bottiglia", organic: "Bio",
       toTop: "Torna su", allergens: "Per allergie e intolleranze chiedi al nostro personale.",
-      maps: "Come arrivare", whatsapp: "WhatsApp", comingSoon: "Link in arrivo",
+      maps: "Mappa", whatsapp: "WhatsApp", comingSoon: "Link in arrivo",
       langLabel: "Lingua", unavailable: "Il menu non è al momento disponibile. Riprova tra qualche istante.",
       pageTitle: "Menu — Bivio Bistrot Roma",
       description: "Il menu di Bivio Bistrot a Roma: cucina di stagione, carta dei vini e distillati.",
       sections: "Sezioni",
-      galleryTitle: "Il locale", gallerySubtitle: "Cucina a vista, terrazzino e tavoli per stare insieme",
+      galleryPill: "Il locale", galleryOpen: "Guarda le foto del locale",
       close: "Chiudi", prev: "Foto precedente", next: "Foto successiva", openPhoto: "Apri foto"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
       categoriesLabel: "Categories", glass: "Glass", bottle: "Bottle", organic: "Organic",
       toTop: "Back to top", allergens: "For allergies and intolerances, please ask our staff.",
-      maps: "Directions", whatsapp: "WhatsApp", comingSoon: "Link coming soon",
+      maps: "Map", whatsapp: "WhatsApp", comingSoon: "Link coming soon",
       langLabel: "Language", unavailable: "The menu is currently unavailable. Please try again shortly.",
       pageTitle: "Menu — Bivio Bistrot Rome",
       description: "The Bivio Bistrot menu in Rome: seasonal kitchen, wine list and spirits.",
       sections: "Sections",
-      galleryTitle: "The place", gallerySubtitle: "Open kitchen, terrace and tables to gather around",
+      galleryPill: "The place", galleryOpen: "See photos of the place",
       close: "Close", prev: "Previous photo", next: "Next photo", openPhoto: "Open photo"
     }
   },
