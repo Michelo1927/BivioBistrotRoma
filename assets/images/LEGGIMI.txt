@@ -7,6 +7,9 @@ Struttura cartelle: una cartella per ogni categoria della cucina.
   assets/images/in-dolcezza/
 Vini e distillati non hanno immagini e quindi non hanno cartelle.
 
+FOTO DEL LOCALE (logo, esterni, interni, dettagli)
+  assets/images/locale/   -> istruzioni in locale/LEGGIMI.txt
+
 REGOLA DEI NOMI
   assets/images/<categoria>/<id-del-piatto>.jpg
   L'id e la categoria sono quelli scritti in menu-data.js, sempre in minuscolo

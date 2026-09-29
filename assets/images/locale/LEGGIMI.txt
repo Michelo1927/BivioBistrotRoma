@@ -1,0 +1,27 @@
+FOTO DEL LOCALE — Bivio Bistrot Roma
+Cartella: assets/images/locale/
+
+Carica qui le foto del ristorante, divise per tipo:
+
+  logo/       Logo del locale. Meglio in PNG o SVG con sfondo trasparente.
+              Se hai più versioni: logo-scuro.png, logo-chiaro.png
+
+  esterni/    Facciata, insegna, dehors, vista dalla strada.
+
+  interni/    Sala, bancone, tavoli apparecchiati, atmosfera.
+
+  dettagli/   Particolari: bicchieri, bottiglie, luci, mise en place, cucina al lavoro.
+
+NOMI DEI FILE
+  - Tutto minuscolo, senza spazi né accenti: usa il trattino.
+    Esempi: sala-principale.jpg, insegna-sera.jpg, dehors-estate.jpg
+  - Un nome che descrive la foto aiuta a scegliere dove usarla.
+
+FORMATO CONSIGLIATO
+  - JPG per le foto, PNG/SVG per il logo.
+  - Lato lungo 1600-2400 px; peso sotto i 500 KB se possibile
+    (se sono più pesanti va bene lo stesso: le ottimizzo io).
+  - Sia orizzontali che verticali vanno bene.
+
+Quando hai caricato le foto, avvisami: le integro nel sito
+(per esempio nell'intestazione, in una galleria o come sfondo).
