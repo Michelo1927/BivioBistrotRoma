@@ -118,6 +118,46 @@
     return navEl ? navEl.offsetHeight : 0;
   }
 
+  // ---------------------------------------------------------------- Ora (ordine dinamico delle categorie)
+  /** true se l'orario `now` ("HH:MM") è uguale o successivo a `hhmm` ("HH:MM") nella stessa giornata. Pura. */
+  function isAfter(hhmm, now) {
+    function minutes(v) {
+      var m = /^(\d{1,2}):(\d{2})$/.exec(String(v));
+      return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : NaN;
+    }
+    var a = minutes(hhmm), b = minutes(now);
+    return !isNaN(a) && !isNaN(b) && b >= a;
+  }
+
+  /**
+   * Ora corrente "HH:MM" a Roma (fallback: ora locale se timeZone non è supportato).
+   * SOLO PER DEBUG: `?ora=HH:MM` nell'URL forza l'ora (ignorato se malformato).
+   */
+  function currentTime() {
+    try {
+      var forced = new URLSearchParams(location.search).get("ora");
+      if (forced && /^([01]\d|2[0-3]):[0-5]\d$/.test(forced)) return forced;
+    } catch (e) { /* URLSearchParams assente */ }
+    try {
+      var parts = new Intl.DateTimeFormat("it-IT", { timeZone: "Europe/Rome", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+      var h = "", m = "";
+      parts.forEach(function (p) { if (p.type === "hour") h = p.value; else if (p.type === "minute") m = p.value; });
+      if (h && m) return h + ":" + m;
+    } catch (e) { /* Intl/timeZone non supportati: ora locale */ }
+    var d = new Date();
+    return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
+  }
+
+  /** Categorie della sezione nell'ordine di rendering: quelle con `firstFrom` già scattato passano in testa. */
+  function orderedCategories(section) {
+    var now = currentTime();
+    var first = [], rest = [];
+    section.categories.forEach(function (cat) {
+      (cat.firstFrom && isAfter(cat.firstFrom, now) ? first : rest).push(cat);
+    });
+    return first.concat(rest);
+  }
+
   // ---------------------------------------------------------------- Guard
   if (!MENU || !MENU.sections || !mainEl) {
     if (mainEl) {
@@ -308,7 +348,11 @@
     ]);
   }
 
-  function renderWine(w) {
+  /**
+   * Riga a due prezzi (vini, caffetteria). Le classi wine__* sono generiche: valgono per ogni sezione "list2".
+   * `columns` = section.priceColumns ([{ key, label }, { key, label }]).
+   */
+  function renderPriceRow(w, columns) {
     var nameLine = [el("h3", { class: "wine__name", text: tr(w, "name") })];
     if (w.organic) nameLine.push(el("span", { class: "badge", text: t("organic") }));
     nameLine.push(el("span", { class: "leader", "aria-hidden": "true" }));
@@ -319,8 +363,10 @@
 
     var li = el("li", { class: "wine" }, [
       el("div", { class: "wine__head" }, nameLine),
-      el("div", { class: "wine__prices" }, [priceCell(t("glass"), w.glassPrice), priceCell(t("bottle"), w.bottlePrice)]),
-      meta ? el("p", { class: "wine__meta", text: meta }) : null
+      el("div", { class: "wine__prices" }, columns.map(function (col) { return priceCell(t(col.label), w[col.key]); })),
+      meta ? el("p", { class: "wine__meta", text: meta }) : null,
+      // Allergeni "ask": stessa resa della nota chef dei piatti
+      w.allergens === "ask" ? el("p", { class: "dish__allergens dish__allergens--chef wine__ask", text: t("allergensAsk") }) : null
     ]);
     return li;
   }
@@ -338,7 +384,7 @@
 
   /** Renderizza una categoria; restituisce null se non contiene voci. */
   function renderCategory(section, cat, index) {
-    var source = section.type === "food" ? MENU.dishes : section.type === "wine" ? MENU.wines : MENU.spirits;
+    var source = section.type === "food" ? MENU.dishes : section.type === "list2" ? MENU[section.source] : MENU.spirits;
     var items = (source || []).filter(function (item) { return item.category === cat.id; });
     if (!items.length) return null;
 
@@ -352,12 +398,13 @@
 
     if (section.type === "food") {
       wrapper.appendChild(el("div", { class: "dish-grid" }, items.map(renderDish)));
-    } else if (section.type === "wine") {
+    } else if (section.type === "list2") {
       // Intestazione colonne (solo desktop, decorativa: le etichette sono ripetute per lo screen reader)
-      wrapper.appendChild(el("div", { class: "wine-cols", "aria-hidden": "true" }, [
-        el("span", { text: t("glass") }), el("span", { text: t("bottle") })
-      ]));
-      wrapper.appendChild(el("ul", { class: "wine-list" }, items.map(renderWine)));
+      var columns = section.priceColumns;
+      wrapper.appendChild(el("div", { class: "wine-cols", "aria-hidden": "true" }, columns.map(function (col) {
+        return el("span", { text: t(col.label) });
+      })));
+      wrapper.appendChild(el("ul", { class: "wine-list" }, items.map(function (item) { return renderPriceRow(item, columns); })));
     } else {
       wrapper.appendChild(el("ul", { class: "spirit-list" }, items.map(renderSpirit)));
     }
@@ -366,7 +413,10 @@
 
   function renderSection(section) {
     var frag = document.createDocumentFragment();
-    section.categories.forEach(function (cat, index) {
+    // Nota di sezione (riquadro sobrio prima della prima categoria)
+    var note = tr(section, "note");
+    if (note) frag.appendChild(el("p", { class: "section-note" }, [buildInfoIcon(14), el("span", { text: note })]));
+    orderedCategories(section).forEach(function (cat, index) {
       var node = renderCategory(section, cat, index);
       if (node) frag.appendChild(node);
     });
@@ -398,6 +448,10 @@
       var on = btn.getAttribute("data-section") === activeSectionId;
       btn.setAttribute("aria-selected", on ? "true" : "false");
       btn.setAttribute("tabindex", on ? "0" : "-1");
+      // Riga tab scorrevole (schermi stretti): porta la tab attiva in vista senza scrollare la pagina
+      if (on && tabsEl.scrollWidth > tabsEl.clientWidth) {
+        tabsEl.scrollTo({ left: Math.max(0, btn.offsetLeft - (tabsEl.clientWidth - btn.offsetWidth) / 2), behavior: "auto" });
+      }
     });
     mainEl.setAttribute("role", "tabpanel");
     mainEl.setAttribute("aria-labelledby", "tab-" + activeSectionId);

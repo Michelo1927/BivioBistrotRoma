@@ -8,12 +8,21 @@
  *  - meta       : dati generali (nome, città, valuta, lingue, link di contatto).
  *  - ui         : stringhe dell'interfaccia per lingua ({ it: {...}, en: {...} }).
  *  - sections   : sezioni del menu, nell'ordine in cui compaiono come tab.
- *                 `type` decide il renderer: "food" | "wine" | "spirit".
+ *                 `type` decide il renderer: "food" | "list2" | "spirit".
  *                 Ogni sezione ha le sue `categories` (ordine = ordine di rendering).
+ *                 "list2" = elenco a DUE prezzi (vini, caffetteria); la sezione dichiara:
+ *                   source       : nome dell'array di voci da usare ("wines" | "cafe");
+ *                   priceColumns : [{ key, label }, { key, label }] -> `key` = campo prezzo della voce,
+ *                                  `label` = chiave `ui` dell'intestazione colonna (es. "glass", "counter").
+ *                 Campo opzionale di sezione: `note` (riquadro informativo in cima alla scheda).
+ *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) fino a
+ *                 mezzanotte la categoria passa in prima posizione. Solo per debug: `?ora=HH:MM` nell'URL
+ *                 forza l'ora (ignorato se malformato).
  *  - dishes     : piatti   -> { id, name, description, price (null = nessun prezzo mostrato), allergens, frozen?, category, image, placeholder }
  *  - allergens  : i 14 allergeni del regolamento UE 1169/2011 -> { id (1-14), name, en: { name } }
  *  - wines      : vini     -> { id, name, winery, detail, vintage, abv (numero, es. 12.5), organic, bottlePrice, glassPrice, category }
  *  - spirits    : distillati -> { id, name, kind, price, category }
+ *  - cafe       : caffetteria -> { id, name, detail?, counterPrice (banco), tablePrice (tavolo), category, allergens? }
  *
  * COME AGGIUNGERE UN PIATTO
  *  Aggiungi un oggetto in `dishes` sotto il commento della categoria giusta.
@@ -24,17 +33,18 @@
  *  `allergens` sul piatto:
  *    - array di id (1-14, vedi `allergens`) = allergeni presenti, mostrati nell'ordine degli id;
  *    - []                                   = nessun allergene dichiarato (non si mostra nulla);
- *    - "chef"                               = allergeni comunicati separatamente in base alla ricetta della Chef.
+ *    - "chef"                               = allergeni comunicati separatamente in base alla ricetta della Chef;
+ *    - "ask"                                = (caffetteria) nota "chiedi al personale" sotto la voce.
  *  `frozen: true` = prodotto gelo: un asterisco dopo il nome rimanda alla nota in fondo alla legenda.
  *
  * COME AGGIUNGERE UN VINO / UN DISTILLATO
- *  Aggiungi un oggetto in `wines` / `spirits` con `category` valida per la sezione "vini" / "distillati".
+ *  Aggiungi un oggetto in `wines` / `spirits` / `cafe` con `category` valida per la sezione "vini" / "distillati" / "caffetteria".
  *  Campi opzionali (winery, detail, vintage, kind) = null se assenti.
  *
  * LINGUE (IT / EN)
  *  L'italiano sta nei campi base (label, subtitle, name, description, detail, kind).
- *  Ogni section, category, dish, wine e spirit può avere un blocco opzionale
- *    en: { label, subtitle, name, description, detail, kind }
+ *  Ogni section, category, dish, wine, spirit e voce cafe può avere un blocco opzionale
+ *    en: { label, subtitle, note, name, description, detail, kind }
  *  con le sole traduzioni necessarie. Se `en` o un suo campo manca, si usa l'italiano.
  *  Le stringhe dell'interfaccia stanno in `ui.it` / `ui.en` (stesse chiavi in entrambe).
  *  Per aggiungere una lingua: aggiungila a meta.languages, crea ui.<lingua> e i blocchi <lingua>.
@@ -68,7 +78,7 @@ window.BIVIO_MENU = Object.freeze({
   ui: {
     it: {
       tagline: "Cucina di stagione, vini e distillati", skip: "Vai al menu", navLabel: "Sezioni del menu",
-      categoriesLabel: "Categorie", glass: "Calice", bottle: "Bottiglia", organic: "Bio",
+      categoriesLabel: "Categorie", glass: "Calice", bottle: "Bottiglia", counter: "Banco", table: "Tavolo", organic: "Bio",
       toTop: "Torna su", allergens: "Per allergie e intolleranze chiedi al nostro personale.",
       maps: "Mappa", whatsapp: "WhatsApp", comingSoon: "Link in arrivo",
       langLabel: "Lingua", unavailable: "Il menu non è al momento disponibile. Riprova tra qualche istante.",
@@ -81,11 +91,12 @@ window.BIVIO_MENU = Object.freeze({
       allergensChef: "Allergeni comunicati separatamente in base alla ricetta della Chef",
       frozenNote: "Prodotto gelo: i prodotti alimentari freschi e/o preparati nel nostro laboratorio possono subire una corretta procedura di abbattimento e rinvenimento per garantire un prodotto sempre di alta qualità.",
       allergyAsk: "Per favore comunica qualsiasi allergia al personale.",
+      allergensAsk: "Allergeni: chiedi al personale",
       frozenMark: "Prodotto gelo"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
-      categoriesLabel: "Categories", glass: "Glass", bottle: "Bottle", organic: "Organic",
+      categoriesLabel: "Categories", glass: "Glass", bottle: "Bottle", counter: "Bar", table: "Table", organic: "Organic",
       toTop: "Back to top", allergens: "For allergies and intolerances, please ask our staff.",
       maps: "Map", whatsapp: "WhatsApp", comingSoon: "Link coming soon",
       langLabel: "Language", unavailable: "The menu is currently unavailable. Please try again shortly.",
@@ -98,6 +109,7 @@ window.BIVIO_MENU = Object.freeze({
       allergensChef: "Allergens provided separately, based on the Chef's recipe",
       frozenNote: "Frozen product: fresh food and/or products made in our kitchen may undergo a proper blast-chilling and thawing process to guarantee consistently high quality.",
       allergyAsk: "Please let our staff know about any allergies.",
+      allergensAsk: "Allergens: please ask our staff",
       frozenMark: "Frozen product"
     }
   },
@@ -115,7 +127,8 @@ window.BIVIO_MENU = Object.freeze({
       ]
     },
     {
-      id: "vini", label: "Carta dei Vini", en: { label: "Wine List" }, type: "wine",
+      id: "vini", label: "Cantina", en: { label: "Wine List" }, type: "list2",
+      source: "wines", priceColumns: [{ key: "glassPrice", label: "glass" }, { key: "bottlePrice", label: "bottle" }],
       categories: [
         { id: "prosecco", label: "Prosecco DOC", en: { label: "Prosecco DOC" } },
         { id: "bollicine", label: "Bollicine", en: { label: "Sparkling" } },
@@ -125,11 +138,24 @@ window.BIVIO_MENU = Object.freeze({
       ]
     },
     {
-      id: "distillati", label: "Distillati & Spirits", en: { label: "Spirits" }, type: "spirit",
+      id: "distillati", label: "Distillati", en: { label: "Spirits" }, type: "spirit",
       categories: [
         { id: "amari", label: "Amari", en: { label: "Amari", subtitle: "Italian bitters" } },
         { id: "whiskey", label: "Whiskey", subtitle: "Tradizionali", en: { label: "Whiskey", subtitle: "Classics" } },
         { id: "premium", label: "Premium Spirits & Tonic", en: { label: "Premium Spirits & Tonic" } }
+      ]
+    },
+    {
+      id: "caffetteria", label: "Caffetteria", en: { label: "Café", note: "The table surcharge also applies when seated without table service." },
+      type: "list2", source: "cafe", priceColumns: [{ key: "counterPrice", label: "counter" }, { key: "tablePrice", label: "table" }],
+      note: "La maggiorazione al tavolo verrà applicata anche per l'utilizzo senza il servizio",
+      categories: [
+        { id: "caffe", label: "Caffè", en: { label: "Coffee" } },
+        { id: "latte-cappuccini", label: "Latte e cappuccini", en: { label: "Milk & cappuccino" } },
+        { id: "cioccolata-infusi", label: "Cioccolata e infusi", en: { label: "Hot chocolate & infusions" } },
+        { id: "dolci-lieviti", label: "Dolci e lieviti", en: { label: "Pastries & cakes" } },
+        { id: "bibite", label: "Bibite", en: { label: "Soft drinks" }, firstFrom: "11:00" },
+        { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" } }
       ]
     }
   ],
@@ -376,5 +402,51 @@ window.BIVIO_MENU = Object.freeze({
     { id: "bombay-tonic", name: "Bombay Tonic", kind: "Gin", price: 15, category: "premium" },
     { id: "gin-mare-tonic", name: "Gin Mare Tonic", kind: "Gin", price: 15, category: "premium" },
     { id: "bulldog-tonic", name: "Bulldog Tonic", kind: "Gin", price: 15, category: "premium" }
+  ],
+
+  // ----------------------------------------------------------------- CAFFETTERIA
+  // Due prezzi: counterPrice = al banco, tablePrice = al tavolo (con servizio).
+  cafe: [
+    // --- Caffè
+    { id: "caffe", name: "Caffè", counterPrice: 1.30, tablePrice: 2.50, category: "caffe", en: { name: "Espresso" } },
+    { id: "caffe-decaffeinato", name: "Caffè decaffeinato", counterPrice: 1.70, tablePrice: 2.80, category: "caffe", en: { name: "Decaf espresso" } },
+    { id: "caffe-americano", name: "Caffè americano", counterPrice: 2.00, tablePrice: 3.50, category: "caffe", en: { name: "Americano" } },
+    { id: "caffe-marocchino", name: "Caffè marocchino", counterPrice: 2.20, tablePrice: 3.50, category: "caffe", en: { name: "Marocchino" } },
+    { id: "caffe-doppio", name: "Caffè doppio", counterPrice: 2.30, tablePrice: 3.50, category: "caffe", en: { name: "Double espresso" } },
+    { id: "caffe-shakerato", name: "Caffè shakerato", counterPrice: 3.50, tablePrice: 4.00, category: "caffe", en: { name: "Shaken iced espresso" } },
+    { id: "caffe-corretto", name: "Caffè corretto", counterPrice: 2.20, tablePrice: 3.00, category: "caffe", en: { name: "Espresso with a dash of liqueur" } },
+    { id: "caffe-latte", name: "Caffè latte", counterPrice: 2.40, tablePrice: 3.50, category: "caffe", en: { name: "Caffè latte" } },
+    { id: "ginseng-piccolo", name: "Caffè al ginseng piccolo", counterPrice: 1.70, tablePrice: 2.60, category: "caffe", en: { name: "Small ginseng coffee" } },
+    { id: "ginseng-grande", name: "Caffè al ginseng grande", counterPrice: 2.30, tablePrice: 3.00, category: "caffe", en: { name: "Large ginseng coffee" } },
+    { id: "orzo-piccolo", name: "Caffè d'orzo piccolo", counterPrice: 1.70, tablePrice: 2.60, category: "caffe", en: { name: "Small barley coffee" } },
+    { id: "orzo-grande", name: "Caffè d'orzo grande", counterPrice: 2.30, tablePrice: 3.00, category: "caffe", en: { name: "Large barley coffee" } },
+    { id: "caffe-freddo", name: "Caffè freddo", counterPrice: 2.20, tablePrice: 3.50, category: "caffe", en: { name: "Iced coffee" } },
+
+    // --- Latte e cappuccini
+    { id: "latte-macchiato", name: "Latte macchiato", counterPrice: 2.00, tablePrice: 3.00, category: "latte-cappuccini", en: { name: "Latte macchiato" } },
+    { id: "latte-bianco", name: "Latte bianco", counterPrice: 1.60, tablePrice: 2.20, category: "latte-cappuccini", en: { name: "Hot milk" } },
+    { id: "cappuccino", name: "Cappuccino", counterPrice: 1.80, tablePrice: 3.00, category: "latte-cappuccini", en: { name: "Cappuccino" } },
+    { id: "cappuccino-decaffeinato", name: "Cappuccino decaffeinato", counterPrice: 2.20, tablePrice: 3.50, category: "latte-cappuccini", en: { name: "Decaf cappuccino" } },
+    { id: "cappuccino-soia-zymil", name: "Cappuccino soia / Zymil", counterPrice: 2.50, tablePrice: 3.50, category: "latte-cappuccini", en: { name: "Soy / lactose-free (Zymil) cappuccino" } },
+    { id: "cappuccino-freddo", name: "Cappuccino freddo", counterPrice: 2.80, tablePrice: 3.70, category: "latte-cappuccini", en: { name: "Iced cappuccino" } },
+    { id: "cappuccino-orzo", name: "Cappuccino d'orzo", counterPrice: 2.00, tablePrice: 2.70, category: "latte-cappuccini", en: { name: "Barley cappuccino" } },
+
+    // --- Cioccolata e infusi
+    { id: "cioccolata-calda", name: "Cioccolata calda", detail: "Con panna: maggiorazione di 1,00 €", counterPrice: 4.50, tablePrice: 6.00, category: "cioccolata-infusi", en: { name: "Hot chocolate", detail: "With whipped cream: €1.00 extra" } },
+    { id: "infusi", name: "Infusi", counterPrice: 4.50, tablePrice: 6.00, category: "cioccolata-infusi", en: { name: "Herbal teas & infusions" } },
+
+    // --- Dolci e lieviti
+    { id: "lieviti", name: "Lieviti", counterPrice: 1.80, tablePrice: 2.20, category: "dolci-lieviti", allergens: "ask", en: { name: "Pastries" } },
+    { id: "lievito-vegano", name: "Lievito vegano", counterPrice: 2.20, tablePrice: 2.80, category: "dolci-lieviti", allergens: "ask", en: { name: "Vegan pastry" } },
+    { id: "ciambellone-crostata", name: "Ciambellone / Crostata", counterPrice: 4.50, tablePrice: 6.00, category: "dolci-lieviti", allergens: "ask", en: { name: "Ring cake / Tart" } },
+
+    // --- Bibite
+    { id: "succhi", name: "Succhi di frutta", counterPrice: 3.50, tablePrice: 4.50, category: "bibite", en: { name: "Fruit juices" } },
+    { id: "soft-drink", name: "Soft drink", detail: "Coca-Cola, Fanta, Sprite, Chinotto, Cedrata", counterPrice: 3.50, tablePrice: 4.50, category: "bibite", en: { name: "Soft drinks", detail: "Coca-Cola, Fanta, Sprite, Chinotto, Cedrata" } },
+    { id: "crodino-bitter", name: "Crodino / Bitter", counterPrice: 4.50, tablePrice: 6.00, category: "bibite", en: { name: "Crodino / Bitter" } },
+    { id: "acqua", name: "Acqua 0,5 L", counterPrice: 1.80, tablePrice: 2.50, category: "bibite", en: { name: "Water 0.5 L" } },
+
+    // --- Amari
+    { id: "amari-caffetteria", name: "Amari", counterPrice: 5.00, tablePrice: 6.00, category: "amari-caffetteria", en: { name: "Amari" } }
   ]
 });

@@ -203,6 +203,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 .subnav::-webkit-scrollbar { display: none; }
 
 .tabs {
+  position: relative; /* riferimento per offsetLeft (script.js: tab attiva in vista) */
   padding: 3px; /* spazio per l'outline del focus, altrimenti tagliato dall'overflow */
   margin: -3px;
 }
@@ -294,6 +295,27 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   font-style: italic;
   font-size: 1.25rem;
 }
+
+/* ---------- Nota di sezione (es. Caffetteria): riquadro sobrio, non una categoria ---------- */
+.section-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  margin-bottom: clamp(20px, 4vw, 32px);
+  padding: .55rem .8rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--accent-soft);
+  font-size: .85rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+.section-note .info-icon {
+  flex: 0 0 auto;
+  margin-top: .2em; /* allinea l'icona alla prima riga di testo */
+  color: var(--accent);
+}
+.section-note + .category { padding-top: 0; }
 
 /* ---------- Categoria ---------- */
 .category {
@@ -573,7 +595,8 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
     "head prices"
-    "meta prices";
+    "meta prices"
+    "ask prices";
   align-items: baseline;
   column-gap: 1rem;
   padding: .8rem 0;
@@ -600,6 +623,10 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   margin-top: .15rem;
   font-size: .8125rem;
   color: var(--muted);
+}
+.wine__ask {
+  grid-area: ask;
+  margin-top: .15rem;
 }
 .wine__prices {
   grid-area: prices;
@@ -638,7 +665,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   .wine-cols { display: none; }
   .wine {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "head" "meta" "prices";
+    grid-template-areas: "head" "meta" "ask" "prices";
     row-gap: 0;
     padding: .9rem 0;
   }
@@ -760,7 +787,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   to   { opacity: 1; transform: none; }
 }
 /* Cibo: stagger sulle card. Vini/distillati: stagger sulle categorie. */
-.is-entering:not(.no-anim) .category--wine,
+.is-entering:not(.no-anim) .category--list2,
 .is-entering:not(.no-anim) .category--spirit,
 .is-entering:not(.no-anim) .dish {
   animation: enter .45s var(--ease) both;
@@ -967,6 +994,12 @@ html.is-modal-open { overflow: hidden; }
   .dish__name { font-size: 1.25rem; }
 }
 
+/* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
+@media (max-width: 419.98px) {
+  .tabs { gap: .3rem; }
+  .tab { min-height: 36px; padding: .4rem .6rem; font-size: .75rem; letter-spacing: 0; }
+}
+
 /* ---------- Header: le tre pill restano su una riga sotto i 400px ---------- */
 @media (max-width: 399.98px) {
   .site-header__actions { gap: .35rem; }
@@ -980,8 +1013,8 @@ html.is-modal-open { overflow: hidden; }
   .site-header__logo { width: 200px; }
   .site-header { padding: 0 0 1rem; }
   .dish-grid { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-  .category, .dish, .wine, .spirit { break-inside: avoid; }
+  .category, .dish, .wine, .spirit, .section-note { break-inside: avoid; }
   .menu-info { break-inside: avoid; background: none; border: 1px solid var(--ink); margin-top: 1.5rem; }
   .menu-divider { display: none; }
-  .is-entering .category--wine, .is-entering .category--spirit, .is-entering .dish { animation: none; }
+  .is-entering .category--list2, .is-entering .category--spirit, .is-entering .dish { animation: none; }
 }
