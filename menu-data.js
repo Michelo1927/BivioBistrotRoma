@@ -22,7 +22,7 @@
  *  - allergens  : i 14 allergeni del regolamento UE 1169/2011 -> { id (1-14), name, en: { name } }
  *  - wines      : vini     -> { id, name, winery, detail, vintage, abv (numero, es. 12.5), organic, bottlePrice, glassPrice, category }
  *  - spirits    : distillati -> { id, name, kind, price, category }
- *  - cafe       : caffetteria -> { id, name, detail?, counterPrice (banco), tablePrice (tavolo), category, allergens? }
+ *  - cafe       : caffetteria -> { id, name, detail?, counterPrice (banco), tablePrice (tavolo), category, allergens?, link?, linkAsName? }
  *
  * COME AGGIUNGERE UN PIATTO
  *  Aggiungi un oggetto in `dishes` sotto il commento della categoria giusta.
@@ -36,6 +36,13 @@
  *    - "chef"                               = allergeni comunicati separatamente in base alla ricetta della Chef;
  *    - "ask"                                = (caffetteria) nota "chiedi al personale" sotto la voce.
  *  `frozen: true` = prodotto gelo: un asterisco dopo il nome rimanda alla nota in fondo alla legenda.
+ *
+ * COLLEGAMENTO INTERNO DI UNA VOCE (`link`, opzionale, righe a due prezzi)
+ *  link: { section, category, label } -> sotto il nome compare un collegamento "label" (corsivo, sottolineato) che porta
+ *  alla categoria `category` della sezione `section` (es. { section: "distillati", category: "amari", label: "seeSelection" }).
+ *  `section` e `category` sono id esistenti; `label` è una chiave di `ui` (tradotta in IT/EN). L'href è "#section/category".
+ *  linkAsName: true (opzionale, accanto a `link`) -> il collegamento prende il posto del nome nella riga: il nome resta
+ *  solo per gli screen reader e il link sta nell'intestazione, prima del leader ("label ········ prezzi").
  *
  * COME AGGIUNGERE UN VINO / UN DISTILLATO
  *  Aggiungi un oggetto in `wines` / `spirits` / `cafe` con `category` valida per la sezione "vini" / "distillati" / "caffetteria".
@@ -92,7 +99,8 @@ window.BIVIO_MENU = Object.freeze({
       frozenNote: "Prodotto gelo: i prodotti alimentari freschi e/o preparati nel nostro laboratorio possono subire una corretta procedura di abbattimento e rinvenimento per garantire un prodotto sempre di alta qualità.",
       allergyAsk: "Per favore comunica qualsiasi allergia al personale.",
       allergensAsk: "Allergeni: chiedi al personale",
-      frozenMark: "Prodotto gelo"
+      frozenMark: "Prodotto gelo",
+      seeSelection: "vedi la selezione in Distillati"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -110,7 +118,8 @@ window.BIVIO_MENU = Object.freeze({
       frozenNote: "Frozen product: fresh food and/or products made in our kitchen may undergo a proper blast-chilling and thawing process to guarantee consistently high quality.",
       allergyAsk: "Please let our staff know about any allergies.",
       allergensAsk: "Allergens: please ask our staff",
-      frozenMark: "Frozen product"
+      frozenMark: "Frozen product",
+      seeSelection: "see the selection in Spirits"
     }
   },
 
@@ -447,6 +456,6 @@ window.BIVIO_MENU = Object.freeze({
     { id: "acqua", name: "Acqua 0,5 L", counterPrice: 1.80, tablePrice: 2.50, category: "bibite", en: { name: "Water 0.5 L" } },
 
     // --- Amari
-    { id: "amari-caffetteria", name: "Amari", counterPrice: 5.00, tablePrice: 6.00, category: "amari-caffetteria", en: { name: "Amari" } }
+    { id: "amari-caffetteria", name: "Amari", counterPrice: 5.00, tablePrice: 6.00, category: "amari-caffetteria", link: { section: "distillati", category: "amari", label: "seeSelection" }, linkAsName: true, en: { name: "Amari" } }
   ]
 });

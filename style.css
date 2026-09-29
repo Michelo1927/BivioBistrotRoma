@@ -596,6 +596,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   grid-template-areas:
     "head prices"
     "meta prices"
+    "link prices"
     "ask prices";
   align-items: baseline;
   column-gap: 1rem;
@@ -628,6 +629,29 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   grid-area: ask;
   margin-top: .15rem;
 }
+/* Collegamento interno (es. Caffetteria -> Distillati): corsivo elegante, sottolineato sottile, senza icona */
+.row-link {
+  grid-area: link;
+  justify-self: start;
+  margin-top: .3rem;
+  font-family: var(--serif);
+  font-style: italic;
+  font-weight: 500;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--accent); /* fallback senza color-mix */
+  text-decoration-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  transition: text-decoration-color .2s var(--ease);
+}
+.row-link:hover,
+.row-link:focus-visible { text-decoration-color: var(--accent); }
+/* Nell'intestazione (linkAsName) sostituisce il nome: sta sulla linea di base, accanto al leader */
+.wine__head .row-link { margin-top: 0; justify-self: auto; }
+
 .wine__prices {
   grid-area: prices;
   display: flex;
@@ -665,7 +689,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   .wine-cols { display: none; }
   .wine {
     grid-template-columns: minmax(0, 1fr);
-    grid-template-areas: "head" "meta" "ask" "prices";
+    grid-template-areas: "head" "meta" "link" "ask" "prices";
     row-gap: 0;
     padding: .9rem 0;
   }

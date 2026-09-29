@@ -353,7 +353,24 @@
    * `columns` = section.priceColumns ([{ key, label }, { key, label }]).
    */
   function renderPriceRow(w, columns) {
-    var nameLine = [el("h3", { class: "wine__name", text: tr(w, "name") })];
+    // Collegamento interno opzionale (w.link): porta a una categoria di un'altra sezione
+    var linkEl = null;
+    var linkAsName = false;
+    if (w.link && findSection(w.link.section)) {
+      var link = w.link;
+      linkAsName = w.linkAsName === true;
+      linkEl = el("a", { class: "row-link", href: "#" + link.section + (link.category ? "/" + link.category : ""), text: t(link.label) });
+      linkEl.addEventListener("click", function (e) {
+        e.preventDefault();
+        setSection(link.section, { category: link.category });
+        // Dopo il re-render il layout può assestarsi (animazione d'ingresso, altezza pagina): riallinea al frame successivo
+        window.requestAnimationFrame(function () { scrollToCategory(link.category, true); });
+      });
+    }
+
+    // linkAsName: il nome resta solo per gli screen reader e il link lo sostituisce nell'intestazione
+    var nameLine = [el("h3", { class: linkAsName ? "wine__name visually-hidden" : "wine__name", text: tr(w, "name") })];
+    if (linkAsName) nameLine.push(linkEl);
     if (w.organic) nameLine.push(el("span", { class: "badge", text: t("organic") }));
     nameLine.push(el("span", { class: "leader", "aria-hidden": "true" }));
 
@@ -365,6 +382,7 @@
       el("div", { class: "wine__head" }, nameLine),
       el("div", { class: "wine__prices" }, columns.map(function (col) { return priceCell(t(col.label), w[col.key]); })),
       meta ? el("p", { class: "wine__meta", text: meta }) : null,
+      linkAsName ? null : linkEl,
       // Allergeni "ask": stessa resa della nota chef dei piatti
       w.allergens === "ask" ? el("p", { class: "dish__allergens dish__allergens--chef wine__ask", text: t("allergensAsk") }) : null
     ]);
