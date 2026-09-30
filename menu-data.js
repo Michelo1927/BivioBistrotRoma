@@ -240,31 +240,33 @@ window.BIVIO_MENU = Object.freeze({
       description: "Dal cuore morbido, su fonduta di Parmigiano al profumo di limone",
       price: 15, allergens: [1, 3, 7], category: "per-iniziare", image: "assets/images/per-iniziare/uovo-croccante.jpg",
       en: { name: "Crispy egg", description: "Soft-centred, on Parmigiano fondue scented with lemon" },
+      // DEMO: foto Unsplash d'esempio, da togliere quando c'è la foto vera
       placeholder: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "millefoglie-melanzane", name: "Millefoglie di melanzane", description: "",
       price: 13, allergens: [3, 5, 8, 9], category: "per-iniziare", image: "assets/images/per-iniziare/millefoglie-melanzane.jpg",
       en: { name: "Aubergine millefeuille", description: "" },
+      // DEMO: foto Unsplash d'esempio, da togliere quando c'è la foto vera
       placeholder: "https://images.unsplash.com/photo-1632229095740-8c75082087c5?auto=format&fit=crop&w=800&h=600&q=70"
     },
     {
       id: "burrata", name: "Burrata", description: "Pomodorini confit, basilico e olio EVO",
       price: 13, allergens: [7, 8], category: "per-iniziare", image: "assets/images/per-iniziare/burrata.jpg",
       en: { name: "Burrata", description: "Confit cherry tomatoes, basil and extra virgin olive oil" },
-      placeholder: "https://images.unsplash.com/photo-1555072930-714bba1d24e2?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "pane-burro-alici", name: "Pane, burro e alici", description: "Alici del Cantabrico",
       price: 18, allergens: [1, 4, 7], category: "per-iniziare", image: "assets/images/per-iniziare/pane-burro-alici.jpg",
       en: { name: "Bread, butter and anchovies", description: "Cantabrian anchovies" },
-      placeholder: "https://images.unsplash.com/photo-1560174122-cac0c0bdacc6?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "arancino", name: "Arancino della Chef", description: "",
       price: 7, allergens: "chef", category: "per-iniziare", image: "assets/images/per-iniziare/arancino.jpg",
       en: { name: "Chef's arancino", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1688458296759-91020b4ff2ba?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
 
     // --- Per Continuare
@@ -272,27 +274,27 @@ window.BIVIO_MENU = Object.freeze({
       id: "mezze-maniche-norma", name: "Mezze maniche alla Norma", description: "",
       price: 18, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/mezze-maniche-norma.jpg",
       en: { name: "Mezze maniche alla Norma", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "gnocchetti-pistacchio", name: "Gnocchetti al pesto di pistacchio",
       description: "Pistacchio di Bronte, guanciale e granella di pistacchio",
       price: 20, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/gnocchetti-pistacchio.jpg",
       en: { name: "Gnocchetti with pistachio pesto", description: "Bronte pistachio, guanciale and crushed pistachios" },
-      placeholder: "https://images.unsplash.com/photo-1584434127023-0c7135f8f18c?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "tonnarello", name: "Tonnarello", description: "Pomodorino confit e stracciatella",
       price: 20, allergens: [1, 3, 7], category: "per-continuare", image: "assets/images/per-continuare/tonnarello.jpg",
       en: { name: "Tonnarello", description: "Confit cherry tomatoes and stracciatella" },
-      placeholder: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "piatto-del-giorno", name: "Piatto del giorno",
       description: "Chiedi al personale la proposta di oggi",
       price: null, allergens: "chef", category: "per-continuare", image: "assets/images/per-continuare/piatto-del-giorno.jpg",
       en: { name: "Dish of the day", description: "Ask our staff for today's special" },
-      placeholder: "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
 
     // --- Per Finire
@@ -300,25 +302,25 @@ window.BIVIO_MENU = Object.freeze({
       id: "tagliata-pollo", name: "Tagliata di pollo", description: "Glassata al miele, senape e limone",
       price: 25, allergens: [10, 12], category: "per-finire", image: "assets/images/per-finire/tagliata-pollo.jpg",
       en: { name: "Sliced chicken", description: "Glazed with honey, mustard and lemon" },
-      placeholder: "https://images.unsplash.com/photo-1675984491214-609854c3ab8d?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "tartare-fassona", name: "Tartare di fassona / scottona", description: "Con mango e mayo-senape",
       price: 22, allergens: [3, 10, 12], frozen: true, category: "per-finire", image: "assets/images/per-finire/tartare-fassona.jpg",
       en: { name: "Fassona / Scottona beef tartare", description: "With mango and mustard mayo" },
-      placeholder: "https://images.unsplash.com/photo-1770210627300-d4fa9b75dbb7?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "entrecote", name: "Entrecôte danese ai ferri", description: "Con patate al rosmarino",
       price: 22, allergens: [12], category: "per-finire", image: "assets/images/per-finire/entrecote.jpg",
       en: { name: "Grilled Danish entrecôte", description: "With rosemary potatoes" },
-      placeholder: "https://images.unsplash.com/photo-1600891964092-4316c288032e?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "guancia-brasata", name: "Guancia brasata", description: "Con purè al Parmigiano",
       price: 28, allergens: [7], category: "per-finire", image: "assets/images/per-finire/guancia-brasata.jpg",
       en: { name: "Braised beef cheek", description: "With Parmigiano mash" },
-      placeholder: "https://images.unsplash.com/photo-1769773183948-d24e3c5a2b82?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
 
     // --- Insieme A (contorni)
@@ -326,19 +328,19 @@ window.BIVIO_MENU = Object.freeze({
       id: "broccoletti", name: "Broccoletti saltati", description: "",
       price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/broccoletti.jpg",
       en: { name: "Sautéed broccoli rabe", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1732185370983-14bb41f68e47?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "cicoria", name: "Cicoria saltata", description: "",
       price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/cicoria.jpg",
       en: { name: "Sautéed chicory", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1732185370983-14bb41f68e47?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "verdure-griglia", name: "Verdura di stagione alla griglia", description: "",
       price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/verdure-griglia.jpg",
       en: { name: "Grilled seasonal vegetables", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1625944227313-4f7f68e6b3fa?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
 
     // --- In Dolcezza (dessert)
@@ -346,13 +348,13 @@ window.BIVIO_MENU = Object.freeze({
       id: "cannolo", name: "Cannolo siciliano", description: "",
       price: 8, allergens: [1, 3, 7], frozen: true, category: "in-dolcezza", image: "assets/images/in-dolcezza/cannolo.jpg",
       en: { name: "Sicilian cannolo", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1752079432431-43f97209f979?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     },
     {
       id: "cheesecake", name: "Cheesecake", description: "",
       price: 8, allergens: [1, 3, 7], category: "in-dolcezza", image: "assets/images/in-dolcezza/cheesecake.jpg",
       en: { name: "Cheesecake", description: "" },
-      placeholder: "https://images.unsplash.com/photo-1488477181946-6428a0291777?auto=format&fit=crop&w=800&h=600&q=70"
+      placeholder: null
     }
   ],
 
