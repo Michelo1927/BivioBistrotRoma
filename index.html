@@ -11,10 +11,9 @@
   <link rel="icon" type="image/png" href="assets/brand/favicon.png">
   <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
 
-  <!-- Font: Cormorant Garamond (titoli) + Inter (testo) -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600&display=swap">
+  <!-- Font: Cormorant Garamond (titoli) + Inter (testo), in locale in assets/fonts/ (@font-face in style.css): nessuna richiesta a Google -->
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/inter-latin.woff2" crossorigin>
+  <link rel="preload" as="font" type="font/woff2" href="assets/fonts/cormorant-garamond-latin.woff2" crossorigin>
 
   <link rel="stylesheet" href="style.css">
   <!-- Script classici (no moduli): funziona anche da file:// — l'ordine conta -->
