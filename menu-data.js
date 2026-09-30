@@ -15,9 +15,11 @@
  *                   priceColumns : [{ key, label }, { key, label }] -> `key` = campo prezzo della voce,
  *                                  `label` = chiave `ui` dell'intestazione colonna (es. "glass", "counter").
  *                 Campo opzionale di sezione: `note` (riquadro informativo in cima alla scheda).
- *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) fino a
- *                 mezzanotte la categoria passa in prima posizione. Solo per debug: `?ora=HH:MM` nell'URL
- *                 forza l'ora (ignorato se malformato).
+ *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) la
+ *                 categoria passa in prima posizione. `firstUntil: "HH:MM"` (opzionale) chiude la fascia;
+ *                 senza, vale fino a mezzanotte; se è minore o uguale di `firstFrom` la fascia prosegue
+ *                 dopo mezzanotte (es. 11:00-04:00). Più categorie promosse restano nell'ordine in cui
+ *                 sono dichiarate. Solo per debug: `?ora=HH:MM` nell'URL forza l'ora (ignorato se malformato).
  *  - dishes     : piatti   -> { id, name, description, price (null = nessun prezzo mostrato), allergens, frozen?, category, image (null = nessuna foto), placeholder }
  *  - allergens  : i 14 allergeni del regolamento UE 1169/2011 -> { id (1-14), name, en: { name } }
  *  - wines      : vini     -> { id, name, winery, detail, vintage, abv (numero, es. 12.5), organic, bottlePrice, glassPrice, category }
@@ -189,8 +191,8 @@ window.BIVIO_MENU = Object.freeze({
         { id: "latte-cappuccini", label: "Latte e cappuccini", en: { label: "Milk & cappuccino" } },
         { id: "cioccolata-infusi", label: "Cioccolata e infusi", en: { label: "Hot chocolate & infusions" } },
         { id: "dolci-lieviti", label: "Dolci e lieviti", en: { label: "Pastries & cakes" } },
-        { id: "bibite", label: "Bibite", en: { label: "Soft drinks" }, firstFrom: "11:00" },
-        { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" } }
+        { id: "bibite", label: "Bibite", en: { label: "Soft drinks" }, firstFrom: "11:00", firstUntil: "04:00" },
+        { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" }, firstFrom: "11:00", firstUntil: "04:00" }
       ]
     }
   ],

@@ -125,10 +125,19 @@
     return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : NaN;
   }
 
-  /** true se l'orario `now` ("HH:MM") è uguale o successivo a `hhmm` ("HH:MM") nella stessa giornata. Pura. */
-  function isAfter(hhmm, now) {
-    var a = minutes(hhmm), b = minutes(now);
-    return !isNaN(a) && !isNaN(b) && b >= a;
+  /**
+   * true se `now` ("HH:MM") cade nella fascia che parte da `from`. Pura.
+   * Senza `until`: da `from` fino a mezzanotte. Con `until` > `from`: from <= now < until.
+   * Con `until` <= `from` la fascia scavalca la mezzanotte: now >= from || now < until.
+   * Valori malformati -> false.
+   */
+  function inWindow(from, until, now) {
+    var a = minutes(from), n = minutes(now);
+    if (isNaN(a) || isNaN(n)) return false;
+    if (until === undefined || until === null || until === "") return n >= a;
+    var u = minutes(until);
+    if (isNaN(u)) return false;
+    return u > a ? (n >= a && n < u) : (n >= a || n < u);
   }
 
   /**
@@ -150,12 +159,12 @@
     return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
   }
 
-  /** Categorie della sezione nell'ordine di rendering: quelle con `firstFrom` già scattato passano in testa. */
+  /** Categorie della sezione nell'ordine di rendering: quelle la cui fascia `firstFrom`/`firstUntil` è attiva passano in testa (in ordine di dichiarazione). */
   function orderedCategories(section) {
     var now = currentTime();
     var first = [], rest = [];
     section.categories.forEach(function (cat) {
-      (cat.firstFrom && isAfter(cat.firstFrom, now) ? first : rest).push(cat);
+      (cat.firstFrom && inWindow(cat.firstFrom, cat.firstUntil, now) ? first : rest).push(cat);
     });
     return first.concat(rest);
   }
