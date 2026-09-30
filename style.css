@@ -524,6 +524,9 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 }
 
 .dish__body { padding-top: .9rem; }
+/* Piatto senza foto: card solo testo */
+.dish--no-media { border-top: 1px solid var(--line); padding-top: .9rem; }
+.dish--no-media .dish__body { padding-top: 0; }
 .dish__head {
   display: flex;
   align-items: baseline;

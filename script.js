@@ -294,11 +294,18 @@
    * Catena di fallback per la foto di un piatto:
    *   1. dish.image        -> foto locale (assets/images/<categoria>/<id>.jpg)
    *   2. dish.placeholder  -> foto Unsplash tematica, provata una sola volta
-   *   3. icona SVG         -> il box (aspect-ratio 4/3) resta identico: nessun salto di layout
+   *                           (se image è null si parte direttamente da qui)
+   *   3. icona SVG         -> ripiego se un file indicato non si carica; il box (aspect-ratio 4/3) resta identico
+   * Se image e placeholder sono entrambi null non si arriva qui: renderDish non crea il riquadro.
    * Gli handler vanno impostati PRIMA di assegnare src.
    */
   function attachImageFallback(img, figure, dish) {
     var triedPlaceholder = false;
+    var start = dish.image;
+    if (!start && dish.placeholder) {
+      triedPlaceholder = true;
+      start = dish.placeholder;
+    }
 
     function showIcon() {
       img.onerror = null;
@@ -315,7 +322,7 @@
         showIcon();
       }
     };
-    img.src = dish.image;
+    img.src = start;
   }
 
   // ---------------------------------------------------------------- Allergeni
@@ -397,9 +404,13 @@
 
   // ---------------------------------------------------------------- Renderer
   function renderDish(d, i) {
-    var img = el("img", { alt: tr(d, "name"), loading: "lazy", decoding: "async", width: "800", height: "600" });
-    var figure = el("figure", { class: "dish__media" }, [img]);
-    attachImageFallback(img, figure, d);
+    // Senza image né placeholder: card solo testo, nessun riquadro
+    var figure = null;
+    if (d.image || d.placeholder) {
+      var img = el("img", { alt: tr(d, "name"), loading: "lazy", decoding: "async", width: "800", height: "600" });
+      figure = el("figure", { class: "dish__media" }, [img]);
+      attachImageFallback(img, figure, d);
+    }
 
     // Nome + eventuale asterisco "prodotto gelo"
     var nameEl = el("h3", { class: "dish__name", text: tr(d, "name") });
@@ -418,7 +429,7 @@
     var allergenLine = renderDishAllergens(d);
     if (allergenLine) body.appendChild(allergenLine);
 
-    var article = el("article", { class: "dish" }, [figure, body]);
+    var article = el("article", { class: figure ? "dish" : "dish dish--no-media" }, [figure, body]);
     article.style.setProperty("--i", String(Math.min(i, 12)));
     return article;
   }

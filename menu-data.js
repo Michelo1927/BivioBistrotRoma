@@ -18,7 +18,7 @@
  *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) fino a
  *                 mezzanotte la categoria passa in prima posizione. Solo per debug: `?ora=HH:MM` nell'URL
  *                 forza l'ora (ignorato se malformato).
- *  - dishes     : piatti   -> { id, name, description, price (null = nessun prezzo mostrato), allergens, frozen?, category, image, placeholder }
+ *  - dishes     : piatti   -> { id, name, description, price (null = nessun prezzo mostrato), allergens, frozen?, category, image (null = nessuna foto), placeholder }
  *  - allergens  : i 14 allergeni del regolamento UE 1169/2011 -> { id (1-14), name, en: { name } }
  *  - wines      : vini     -> { id, name, winery, detail, vintage, abv (numero, es. 12.5), organic, bottlePrice, glassPrice, category }
  *  - spirits    : distillati -> { id, name, kind, price, category }
@@ -70,12 +70,14 @@
  *  Salva la foto come  assets/images/<category>/<id>.jpg  (rapporto 4:3, consigliato 1200x900 o 800x600, < 300 KB).
  *  Una cartella per categoria (per-iniziare, per-continuare, per-finire, insieme-a, in-dolcezza);
  *  vini e distillati non hanno immagini. Nomi file in minuscolo (su hosting Linux sono case-sensitive).
- *  Il campo `image` è già preconfigurato con quel percorso; il file può non esistere ancora.
+ *  Al momento `image: null` su tutti i piatti = card solo testo, senza riquadro. Quando arriva la foto la salvi come
+ *  assets/images/<category>/<id>.jpg E imposti `image: "assets/images/<category>/<id>.jpg"` su quel piatto.
  *
  * CATENA DI FALLBACK DELLE IMMAGINI (gestita da script.js)
+ *  0. `image` e `placeholder` entrambi null -> il piatto non ha riquadro (card solo testo)
  *  1. `image`        -> foto locale assets/images/<category>/<id>.jpg
- *  2. `placeholder`  -> foto Unsplash tematica (se non null) quando la locale manca
- *  3. icona grafica  -> segnaposto SVG con lo stesso rapporto d'aspetto (nessun salto di layout)
+ *  2. `placeholder`  -> foto Unsplash tematica (se non null); se `image` è null si mostra direttamente questa
+ *  3. icona grafica  -> segnaposto SVG con lo stesso rapporto d'aspetto, solo come ripiego se un file indicato non si carica
  */
 window.BIVIO_MENU = Object.freeze({
   meta: {
@@ -262,33 +264,33 @@ window.BIVIO_MENU = Object.freeze({
     {
       id: "uovo-croccante", name: "Uovo croccante",
       description: "Dal cuore morbido, su fonduta di Parmigiano al profumo di limone",
-      price: 15, allergens: [1, 3, 7], category: "per-iniziare", image: "assets/images/per-iniziare/uovo-croccante.jpg",
+      price: 15, allergens: [1, 3, 7], category: "per-iniziare", image: null,
       en: { name: "Crispy egg", description: "Soft-centred, on Parmigiano fondue scented with lemon" },
-      // DEMO: foto Unsplash d'esempio, da togliere quando c'è la foto vera
-      placeholder: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&h=600&q=70"
+      // placeholder: "https://images.unsplash.com/photo-1525351484163-7529414344d8?auto=format&fit=crop&w=800&h=600&q=70", // DEMO Unsplash: per l'anteprima al cliente decommentare questa riga E cancellare `placeholder: null` qui sotto
+      placeholder: null
     },
     {
       id: "millefoglie-melanzane", name: "Millefoglie di melanzane", description: "",
-      price: 13, allergens: [3, 5, 8, 9], category: "per-iniziare", image: "assets/images/per-iniziare/millefoglie-melanzane.jpg",
+      price: 13, allergens: [3, 5, 8, 9], category: "per-iniziare", image: null,
       en: { name: "Aubergine millefeuille", description: "" },
-      // DEMO: foto Unsplash d'esempio, da togliere quando c'è la foto vera
-      placeholder: "https://images.unsplash.com/photo-1632229095740-8c75082087c5?auto=format&fit=crop&w=800&h=600&q=70"
+      // placeholder: "https://images.unsplash.com/photo-1632229095740-8c75082087c5?auto=format&fit=crop&w=800&h=600&q=70", // DEMO Unsplash: per l'anteprima al cliente decommentare questa riga E cancellare `placeholder: null` qui sotto
+      placeholder: null
     },
     {
       id: "burrata", name: "Burrata", description: "Pomodorini confit, basilico e olio EVO",
-      price: 13, allergens: [7, 8], category: "per-iniziare", image: "assets/images/per-iniziare/burrata.jpg",
+      price: 13, allergens: [7, 8], category: "per-iniziare", image: null,
       en: { name: "Burrata", description: "Confit cherry tomatoes, basil and extra virgin olive oil" },
       placeholder: null
     },
     {
       id: "pane-burro-alici", name: "Pane, burro e alici", description: "Alici del Cantabrico",
-      price: 18, allergens: [1, 4, 7], category: "per-iniziare", image: "assets/images/per-iniziare/pane-burro-alici.jpg",
+      price: 18, allergens: [1, 4, 7], category: "per-iniziare", image: null,
       en: { name: "Bread, butter and anchovies", description: "Cantabrian anchovies" },
       placeholder: null
     },
     {
       id: "arancino", name: "Arancino della Chef", description: "",
-      price: 7, allergens: "chef", category: "per-iniziare", image: "assets/images/per-iniziare/arancino.jpg",
+      price: 7, allergens: "chef", category: "per-iniziare", image: null,
       en: { name: "Chef's arancino", description: "" },
       placeholder: null
     },
@@ -296,27 +298,27 @@ window.BIVIO_MENU = Object.freeze({
     // --- Per Continuare
     {
       id: "mezze-maniche-norma", name: "Mezze maniche alla Norma", description: "",
-      price: 18, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/mezze-maniche-norma.jpg",
+      price: 18, allergens: [1, 7, 8], category: "per-continuare", image: null,
       en: { name: "Mezze maniche alla Norma", description: "" },
       placeholder: null
     },
     {
       id: "gnocchetti-pistacchio", name: "Gnocchetti al pesto di pistacchio",
       description: "Pistacchio di Bronte, guanciale e granella di pistacchio",
-      price: 20, allergens: [1, 7, 8], category: "per-continuare", image: "assets/images/per-continuare/gnocchetti-pistacchio.jpg",
+      price: 20, allergens: [1, 7, 8], category: "per-continuare", image: null,
       en: { name: "Gnocchetti with pistachio pesto", description: "Bronte pistachio, guanciale and crushed pistachios" },
       placeholder: null
     },
     {
       id: "tonnarello", name: "Tonnarello", description: "Pomodorino confit e stracciatella",
-      price: 20, allergens: [1, 3, 7], category: "per-continuare", image: "assets/images/per-continuare/tonnarello.jpg",
+      price: 20, allergens: [1, 3, 7], category: "per-continuare", image: null,
       en: { name: "Tonnarello", description: "Confit cherry tomatoes and stracciatella" },
       placeholder: null
     },
     {
       id: "piatto-del-giorno", name: "Piatto del giorno",
       description: "Chiedi al personale la proposta di oggi",
-      price: null, allergens: "chef", category: "per-continuare", image: "assets/images/per-continuare/piatto-del-giorno.jpg",
+      price: null, allergens: "chef", category: "per-continuare", image: null,
       en: { name: "Dish of the day", description: "Ask our staff for today's special" },
       placeholder: null
     },
@@ -324,25 +326,25 @@ window.BIVIO_MENU = Object.freeze({
     // --- Per Finire
     {
       id: "tagliata-pollo", name: "Tagliata di pollo", description: "Glassata al miele, senape e limone",
-      price: 25, allergens: [10, 12], category: "per-finire", image: "assets/images/per-finire/tagliata-pollo.jpg",
+      price: 25, allergens: [10, 12], category: "per-finire", image: null,
       en: { name: "Sliced chicken", description: "Glazed with honey, mustard and lemon" },
       placeholder: null
     },
     {
       id: "tartare-fassona", name: "Tartare di fassona / scottona", description: "Con mango e mayo-senape",
-      price: 22, allergens: [3, 10, 12], frozen: true, category: "per-finire", image: "assets/images/per-finire/tartare-fassona.jpg",
+      price: 22, allergens: [3, 10, 12], frozen: true, category: "per-finire", image: null,
       en: { name: "Fassona / Scottona beef tartare", description: "With mango and mustard mayo" },
       placeholder: null
     },
     {
       id: "entrecote", name: "Entrecôte danese ai ferri", description: "Con patate al rosmarino",
-      price: 22, allergens: [12], category: "per-finire", image: "assets/images/per-finire/entrecote.jpg",
+      price: 22, allergens: [12], category: "per-finire", image: null,
       en: { name: "Grilled Danish entrecôte", description: "With rosemary potatoes" },
       placeholder: null
     },
     {
       id: "guancia-brasata", name: "Guancia brasata", description: "Con purè al Parmigiano",
-      price: 28, allergens: [7], category: "per-finire", image: "assets/images/per-finire/guancia-brasata.jpg",
+      price: 28, allergens: [7], category: "per-finire", image: null,
       en: { name: "Braised beef cheek", description: "With Parmigiano mash" },
       placeholder: null
     },
@@ -350,19 +352,19 @@ window.BIVIO_MENU = Object.freeze({
     // --- Insieme A (contorni)
     {
       id: "broccoletti", name: "Broccoletti saltati", description: "",
-      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/broccoletti.jpg",
+      price: 8, allergens: [], category: "insieme-a", image: null,
       en: { name: "Sautéed broccoli rabe", description: "" },
       placeholder: null
     },
     {
       id: "cicoria", name: "Cicoria saltata", description: "",
-      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/cicoria.jpg",
+      price: 8, allergens: [], category: "insieme-a", image: null,
       en: { name: "Sautéed chicory", description: "" },
       placeholder: null
     },
     {
       id: "verdure-griglia", name: "Verdura di stagione alla griglia", description: "",
-      price: 8, allergens: [], category: "insieme-a", image: "assets/images/insieme-a/verdure-griglia.jpg",
+      price: 8, allergens: [], category: "insieme-a", image: null,
       en: { name: "Grilled seasonal vegetables", description: "" },
       placeholder: null
     },
@@ -370,13 +372,13 @@ window.BIVIO_MENU = Object.freeze({
     // --- In Dolcezza (dessert)
     {
       id: "cannolo", name: "Cannolo siciliano", description: "",
-      price: 8, allergens: [1, 3, 7], frozen: true, category: "in-dolcezza", image: "assets/images/in-dolcezza/cannolo.jpg",
+      price: 8, allergens: [1, 3, 7], frozen: true, category: "in-dolcezza", image: null,
       en: { name: "Sicilian cannolo", description: "" },
       placeholder: null
     },
     {
       id: "cheesecake", name: "Cheesecake", description: "",
-      price: 8, allergens: [1, 3, 7], category: "in-dolcezza", image: "assets/images/in-dolcezza/cheesecake.jpg",
+      price: 8, allergens: [1, 3, 7], category: "in-dolcezza", image: null,
       en: { name: "Cheesecake", description: "" },
       placeholder: null
     }
