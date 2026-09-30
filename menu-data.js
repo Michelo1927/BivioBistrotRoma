@@ -172,8 +172,8 @@ window.BIVIO_MENU = Object.freeze({
   // ------------------------------------------------------------------ GALLERIA "IL LOCALE"
   // COME AGGIUNGERE UNA FOTO: metti l'originale in assets/images/locale/{esterni,interni,dettagli}/,
   // lancia `python tools/ottimizza-foto.py` (crea i derivati in locale/web/), poi aggiungi qui un oggetto:
-  // { id, src (-1600), srcSmall (-800), width, height (del -1600), alt, caption, en: { alt, caption }, wide?: true }.
-  // `wide: true` fa occupare due colonne (solo per foto orizzontali). Ordine = ordine in pagina.
+  // { id, src (-1600), srcSmall (-800), width, height (del -1600), alt, caption, en: { alt, caption } }.
+  // width/height (del -1600) servono a script.js per scegliere tra -800 e -1600 in base allo schermo. Ordine = ordine in pagina.
   gallery: [
     {
       id: "esterni-terrazzino", src: "assets/images/locale/web/esterni-terrazzino-1600.jpg", srcSmall: "assets/images/locale/web/esterni-terrazzino-800.jpg",
@@ -183,7 +183,7 @@ window.BIVIO_MENU = Object.freeze({
     {
       id: "interni-cucina-a-vista-3", src: "assets/images/locale/web/interni-cucina-a-vista-3-1600.jpg", srcSmall: "assets/images/locale/web/interni-cucina-a-vista-3-800.jpg",
       width: 1600, height: 1200, alt: "Bancone in mosaico davanti alla cucina a vista", caption: "La cucina a vista",
-      en: { alt: "Mosaic counter in front of the open kitchen", caption: "The open kitchen" }, wide: true
+      en: { alt: "Mosaic counter in front of the open kitchen", caption: "The open kitchen" }
     },
     {
       id: "interni-tavolo-con-piatti", src: "assets/images/locale/web/interni-tavolo-con-piatti-1600.jpg", srcSmall: "assets/images/locale/web/interni-tavolo-con-piatti-800.jpg",

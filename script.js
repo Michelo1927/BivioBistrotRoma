@@ -638,6 +638,19 @@
     return (MENU.gallery && MENU.gallery.length) ? MENU.gallery : [];
   }
 
+  /**
+   * Sceglie la versione della foto per la lightbox: -800 (srcSmall) se basta ai pixel fisici
+   * che il riquadro (92vw x 80vh, come .lightbox__img) può mostrare, altrimenti -1600 (src).
+   */
+  function photoSrc(g) {
+    if (!g.width || !g.height) return g.src;
+    var boxW = window.innerWidth * 0.92;
+    var boxH = window.innerHeight * 0.80;
+    var s = Math.min(boxW / g.width, boxH / g.height, 1);
+    var needed = s * Math.max(g.width, g.height) * (window.devicePixelRatio || 1);
+    return (g.srcSmall && needed <= 800) ? g.srcSmall : g.src;
+  }
+
   /** Aggiorna la pillola "Il locale" (nascosta se non ci sono foto) e la lightbox aperta al cambio lingua. */
   function syncGallery() {
     if (galleryPillEl) galleryPillEl.hidden = !galleryItems().length;
@@ -653,7 +666,7 @@
       var items = galleryItems();
       if (!items.length) return;
       preloaded = true;
-      new Image().src = items[0].src;
+      new Image().src = photoSrc(items[0]);
     }
     galleryPillEl.addEventListener("pointerenter", preload);
     galleryPillEl.addEventListener("focus", preload);
@@ -674,16 +687,17 @@
     lightboxEl.querySelector(".lightbox__text").textContent = caption;
     lightboxEl.querySelector(".lightbox__count").textContent = (lbState.index + 1) + " / " + n;
     img.alt = tr(g, "alt") || caption;
-    if (img.getAttribute("src") !== g.src) {
+    var wanted = photoSrc(g);
+    if (img.getAttribute("src") !== wanted) {
       if (!instant) img.classList.add("is-loading");
       img.onload = img.onerror = function () { img.classList.remove("is-loading"); };
-      img.src = g.src;
+      img.src = wanted;
       if (img.complete) img.classList.remove("is-loading");
     }
     // Precarica le vicine per una navigazione fluida
     [1, -1].forEach(function (d) {
       var nb = items[(lbState.index + d + n) % n];
-      if (nb) new Image().src = nb.src;
+      if (nb) new Image().src = photoSrc(nb);
     });
   }
 
