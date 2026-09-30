@@ -5,7 +5,7 @@
  * il sito funziona aprendo index.html direttamente da file://).
  *
  * STRUTTURA
- *  - meta       : dati generali (nome, città, valuta, lingue, link di contatto).
+ *  - meta       : dati generali (nome, città, valuta, lingue, link di contatto, orari `hours`).
  *  - ui         : stringhe dell'interfaccia per lingua ({ it: {...}, en: {...} }).
  *  - sections   : sezioni del menu, nell'ordine in cui compaiono come tab.
  *                 `type` decide il renderer: "food" | "list2" | "spirit".
@@ -56,6 +56,13 @@
  *  Le stringhe dell'interfaccia stanno in `ui.it` / `ui.en` (stesse chiavi in entrambe).
  *  Per aggiungere una lingua: aggiungila a meta.languages, crea ui.<lingua> e i blocchi <lingua>.
  *
+ * ORARI
+ *  meta.hours: 7 elementi, da lunedì (indice 0) a domenica (indice 6). Ogni elemento è
+ *  { open: "HH:MM", close: "HH:MM" } oppure null = chiuso tutto il giorno.
+ *  Se close <= open la chiusura è dopo mezzanotte (giorno successivo): es. 11:30-02:00.
+ *  Alimenta la pill di stato nell'header e l'elenco orari nel footer (orari di Roma).
+ *  Solo per debug: `?ora=HH:MM` e `?giorno=1..7` (1 = lunedì) nell'URL forzano ora e giorno.
+ *
  * LINK DI CONTATTO
  *  meta.links.maps / meta.links.whatsapp: URL https definitivi. Stringa vuota = pulsante "in arrivo".
  *
@@ -74,6 +81,17 @@ window.BIVIO_MENU = Object.freeze({
   meta: {
     name: "Bivio Bistrot", city: "Roma", currency: "EUR", locale: "it-IT",
     languages: ["it", "en"], defaultLanguage: "it",
+    // Orari di apertura, lunedì -> domenica (indice 0 = lunedì). null = chiuso tutto il giorno.
+    // close <= open = chiusura dopo mezzanotte (es. sabato 11:30-02:00 chiude alle 02:00 di domenica).
+    hours: [
+      { open: "07:30", close: "22:00" }, // lun
+      { open: "07:30", close: "23:00" }, // mar
+      { open: "07:30", close: "23:00" }, // mer
+      { open: "07:30", close: "00:00" }, // gio
+      { open: "07:30", close: "01:00" }, // ven
+      { open: "11:30", close: "02:00" }, // sab
+      { open: "11:30", close: "22:00" }  // dom
+    ],
     // Link di contatto: incolla qui gli URL definitivi. Stringa vuota = pulsante mostrato come "in arrivo" (non cliccabile).
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
@@ -100,7 +118,10 @@ window.BIVIO_MENU = Object.freeze({
       allergyAsk: "Per favore comunica qualsiasi allergia al personale.",
       allergensAsk: "Allergeni: chiedi al personale",
       frozenMark: "Prodotto gelo",
-      seeSelection: "vedi la selezione in Distillati"
+      seeSelection: "vedi la selezione in Distillati",
+      hoursTitle: "Orari", openNow: "Aperto", closedNow: "Chiuso",
+      closesAt: "chiude alle {t}", opensAt: "apre alle {t}", opensTomorrow: "apre domani alle {t}",
+      opensOn: "apre {d} alle {t}", closedDay: "chiuso"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -119,7 +140,10 @@ window.BIVIO_MENU = Object.freeze({
       allergyAsk: "Please let our staff know about any allergies.",
       allergensAsk: "Allergens: please ask our staff",
       frozenMark: "Frozen product",
-      seeSelection: "see the selection in Spirits"
+      seeSelection: "see the selection in Spirits",
+      hoursTitle: "Opening hours", openNow: "Open", closedNow: "Closed",
+      closesAt: "closes at {t}", opensAt: "opens at {t}", opensTomorrow: "opens tomorrow at {t}",
+      opensOn: "opens {d} at {t}", closedDay: "closed"
     }
   },
 

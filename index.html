@@ -17,15 +17,17 @@
 
   <!-- CACHE: a ogni modifica di style.css, menu-data.js o script.js cambia la versione ?v= (data AAAAMMGG),
        altrimenti i telefoni dei clienti possono mostrare il menu vecchio dalla cache. -->
-  <link rel="stylesheet" href="style.css?v=20260930">
+  <link rel="stylesheet" href="style.css?v=20260930e">
   <!-- Script classici (no moduli): funziona anche da file:// — l'ordine conta -->
-  <script defer src="menu-data.js?v=20260930"></script>
-  <script defer src="script.js?v=20260930"></script>
+  <script defer src="menu-data.js?v=20260930e"></script>
+  <script defer src="script.js?v=20260930e"></script>
 </head>
 <body>
   <a class="skip-link" href="#menu" data-i18n="skip">Vai al menu</a>
 
   <header class="site-header" id="top" tabindex="-1">
+    <button type="button" class="status-pill" aria-expanded="false" aria-controls="status-panel" hidden></button>
+    <div class="status-panel" id="status-panel" hidden></div>
     <div class="lang-switch" role="group" aria-label="Lingua" data-i18n-aria="langLabel">
       <button type="button" class="lang-switch__btn" data-lang="it" aria-pressed="true" lang="it">IT</button>
       <span class="lang-switch__sep" aria-hidden="true"></span>
@@ -56,6 +58,7 @@
   </main>
 
   <footer class="site-footer">
+    <div class="hours" hidden></div>
     <p data-i18n="allergens">Per allergie e intolleranze chiedi al nostro personale.</p>
     <p class="site-footer__copy">© <span id="year">2025</span> Bivio Bistrot · Roma</p>
   </footer>

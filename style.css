@@ -186,6 +186,81 @@ data { font-variant-numeric: tabular-nums; }
 a.pill-link[href]:hover { border-color: var(--accent); }
 .pill-link[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 
+/* Pill di stato (aperto/chiuso): in alto a sinistra, speculare al selettore lingua.
+   28px + 4px di margine = centrata otticamente sui bottoni lingua da 36px */
+.status-pill {
+  position: absolute;
+  top: 12px;
+  left: var(--gutter);
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  height: 28px;
+  margin: 4px 0 0;
+  padding: 0 .75rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: 999px;
+  color: var(--ink);
+  max-width: calc(100% - 2 * var(--gutter) - 100px); /* pill + selettore lingua (~90px a destra) non devono toccarsi */
+  background: transparent;
+  cursor: pointer;
+  font-size: .75rem;
+  font-weight: 500;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  transition: border-color .2s var(--ease);
+}
+.status-pill:hover, .status-pill.is-open { border-color: var(--accent); }
+.status-pill[hidden] { display: none; }
+.status-pill__dot {
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.status-pill--open .status-pill__dot { background: #5E8B5A; }
+.status-pill--closed .status-pill__dot { background: var(--brand); }
+.status-pill__text { min-width: 0; overflow: hidden; text-overflow: ellipsis; } /* min-width: 0 = può restringersi nel flex */
+.status-pill__chevron {
+  flex: none;
+  width: 12px;
+  height: 12px;
+  transition: transform .2s var(--ease);
+}
+.status-pill.is-open .status-pill__chevron { transform: rotate(180deg); }
+
+/* Pannello orari a discesa sotto la pill (l'header è centrato: qui si torna a sinistra) */
+.status-panel {
+  position: absolute;
+  top: 50px;
+  left: var(--gutter);
+  z-index: 20;
+  max-width: calc(100% - 2 * var(--gutter));
+  padding: .75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(42, 18, 22, .12);
+  text-align: left;
+  animation: status-panel-in .18s var(--ease);
+}
+.status-panel[hidden] { display: none; }
+.status-panel__title {
+  margin: 0 0 .4rem;
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.status-panel .hours__list { margin: 0; justify-content: start; font-size: .8125rem; color: var(--muted); }
+.status-panel .hours__row dt { text-align: left; }
+@keyframes status-panel-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+
 /* Selettore lingua: in alto a destra, non sticky */
 .lang-switch {
   position: absolute;
@@ -831,6 +906,22 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   letter-spacing: .04em;
 }
 
+/* Orari nel footer: griglia compatta centrata (giorni a destra, orari a sinistra) */
+.hours[hidden] { display: none; }
+.hours__list {
+  display: grid;
+  grid-template-columns: auto auto;
+  column-gap: 1rem;
+  row-gap: .1rem;
+  justify-content: center;
+  margin: 0 0 1rem;
+  font-size: .8125rem;
+}
+.hours__row { display: contents; }
+.hours__row dt { text-align: right; }
+.hours__row dd { margin: 0; text-align: left; font-variant-numeric: tabular-nums; }
+.hours__row--today dt, .hours__row--today dd { color: var(--ink); font-weight: 600; }
+
 /* ---------- Torna su ---------- */
 .to-top {
   position: fixed;
@@ -1073,6 +1164,7 @@ html.is-modal-open { overflow: hidden; }
 @media (max-width: 380px) {
   .tab { padding: .5rem .85rem; font-size: .78rem; }
   .dish__name { font-size: 1.25rem; }
+  .status-pill { padding: 0 .6rem; font-size: .6875rem; }
 }
 
 /* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
@@ -1089,7 +1181,7 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .site-header__actions, .lang-modal, .lightbox { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .site-header__actions, .lang-modal, .lightbox { display: none !important; }
   body, .site-header { background: #fff; }
   .site-header__logo { width: 200px; }
   .site-header { padding: 0 0 1rem; }

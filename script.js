@@ -119,12 +119,14 @@
   }
 
   // ---------------------------------------------------------------- Ora (ordine dinamico delle categorie)
+  /** "HH:MM" -> minuti dalla mezzanotte (NaN se malformato). Pura. */
+  function minutes(v) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(String(v));
+    return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : NaN;
+  }
+
   /** true se l'orario `now` ("HH:MM") è uguale o successivo a `hhmm` ("HH:MM") nella stessa giornata. Pura. */
   function isAfter(hhmm, now) {
-    function minutes(v) {
-      var m = /^(\d{1,2}):(\d{2})$/.exec(String(v));
-      return m ? parseInt(m[1], 10) * 60 + parseInt(m[2], 10) : NaN;
-    }
     var a = minutes(hhmm), b = minutes(now);
     return !isNaN(a) && !isNaN(b) && b >= a;
   }
@@ -156,6 +158,88 @@
       (cat.firstFrom && isAfter(cat.firstFrom, now) ? first : rest).push(cat);
     });
     return first.concat(rest);
+  }
+
+  // ---------------------------------------------------------------- Orari
+  var DAY_KEYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var dayFormatters = {};
+
+  /**
+   * Giorno della settimana a Roma: 0 = lunedì … 6 = domenica (fallback: giorno locale).
+   * SOLO PER DEBUG: `?giorno=1..7` nell'URL forza il giorno, 1 = lunedì (ignorato se malformato).
+   */
+  function currentDay() {
+    try {
+      var forced = new URLSearchParams(location.search).get("giorno");
+      if (forced && /^[1-7]$/.test(forced)) return parseInt(forced, 10) - 1;
+    } catch (e) { /* URLSearchParams assente */ }
+    try {
+      var name = new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Rome", weekday: "short" }).format(new Date());
+      var idx = DAY_KEYS.indexOf(name);
+      if (idx !== -1) return idx;
+    } catch (e) { /* Intl/timeZone non supportati: giorno locale */ }
+    return (new Date().getDay() + 6) % 7;
+  }
+
+  /** Orari validi (array di 7) o null: senza, pill e orari del footer non compaiono. */
+  function weekHours() {
+    var h = MENU && MENU.meta && MENU.meta.hours;
+    return Array.isArray(h) && h.length === 7 ? h : null;
+  }
+
+  /** true se la chiusura cade dopo mezzanotte (close <= open). */
+  function pastMidnight(slot) {
+    return minutes(slot.close) <= minutes(slot.open);
+  }
+
+  /** Nome del giorno i (0 = lunedì) nella lingua corrente. style: "long" | "short". Prima lettera maiuscola. */
+  function dayName(i, style) {
+    var key = locale() + style;
+    if (!dayFormatters[key]) dayFormatters[key] = new Intl.DateTimeFormat(locale(), { weekday: style });
+    var name = dayFormatters[key].format(new Date(2024, 0, 1 + i)); // 1 gennaio 2024 era un lunedì
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  }
+
+  /** Orario da mostrare: la chiusura "00:00" diventa "24:00", il resto invariato. */
+  function shownTime(hhmm, isClose) {
+    return isClose && hhmm === "00:00" ? "24:00" : hhmm;
+  }
+
+  /** Sostituisce {t} e {d} nella stringa di interfaccia `key`. */
+  function fmt(key, time, day) {
+    return t(key).replace("{t}", time).replace("{d}", day || "");
+  }
+
+  /**
+   * Stato attuale: { open: bool, text } oppure null se non ci sono orari.
+   * Aperto anche nella "coda" di ieri se ieri chiudeva dopo mezzanotte.
+   */
+  function openingStatus() {
+    var hours = weekHours();
+    if (!hours) return null;
+    var now = minutes(currentTime());
+    var d = currentDay();
+    var today = hours[d];
+    var yesterday = hours[(d + 6) % 7];
+
+    if (today && now >= minutes(today.open) && (pastMidnight(today) || now < minutes(today.close))) {
+      return { open: true, text: t("openNow") + " · " + fmt("closesAt", shownTime(today.close, true)) };
+    }
+    if (yesterday && pastMidnight(yesterday) && now < minutes(yesterday.close)) {
+      return { open: true, text: t("openNow") + " · " + fmt("closesAt", shownTime(yesterday.close, true)) };
+    }
+    var closed = t("closedNow") + " · ";
+    if (today && now < minutes(today.open)) {
+      return { open: false, text: closed + fmt("opensAt", shownTime(today.open, false)) };
+    }
+    for (var n = 1; n <= 7; n++) {
+      var slot = hours[(d + n) % 7];
+      if (!slot) continue;
+      var time = shownTime(slot.open, false);
+      if (n === 1) return { open: false, text: closed + fmt("opensTomorrow", time) };
+      return { open: false, text: closed + fmt("opensOn", time, dayName((d + n) % 7, "long").toLowerCase()) };
+    }
+    return null;
   }
 
   // ---------------------------------------------------------------- Guard
@@ -812,6 +896,103 @@
     });
   }
 
+  // ---------------------------------------------------------------- Orari: rendering (pill header + footer)
+  var statusEl = document.querySelector(".status-pill");
+  var statusPanelEl = document.querySelector(".status-panel");
+  var hoursEl = document.querySelector(".hours");
+
+  /** Pill "Aperto · chiude alle 23:00" / "Chiuso · apre alle 07:30"; nascosta se non ci sono orari. */
+  function renderStatus() {
+    if (!statusEl) return;
+    var st = openingStatus();
+    statusEl.textContent = "";
+    statusEl.hidden = !st;
+    if (!st) {
+      setStatusPanel(false); // senza orari niente pannello aperto
+      return;
+    }
+    // classList (non className): non deve perdere "is-open" a pannello aperto
+    statusEl.classList.toggle("status-pill--open", st.open);
+    statusEl.classList.toggle("status-pill--closed", !st.open);
+    statusEl.appendChild(el("span", { class: "status-pill__dot", "aria-hidden": "true" }));
+    statusEl.appendChild(el("span", { class: "status-pill__text", text: st.text }));
+    var chevron = svg("svg", { viewBox: "0 0 24 24", "class": "status-pill__chevron", width: "12", height: "12", fill: "none", stroke: "currentColor", "stroke-width": "1.8", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" });
+    chevron.appendChild(svg("path", { d: "M6 9l6 6 6-6" }));
+    statusEl.appendChild(chevron);
+  }
+
+  /** Apre/chiude il pannello degli orari sotto la pill e tiene allineati aria-expanded e classe. */
+  function setStatusPanel(open) {
+    if (!statusEl || !statusPanelEl) return;
+    statusEl.setAttribute("aria-expanded", open ? "true" : "false");
+    statusEl.classList.toggle("is-open", open);
+    statusPanelEl.hidden = !open;
+  }
+
+  /** Pannello sotto la pill: titolo + elenco orari (stesso elenco del footer). */
+  function renderStatusPanel() {
+    if (!statusPanelEl) return;
+    statusPanelEl.textContent = "";
+    var list = buildHoursList();
+    if (!list) return;
+    statusPanelEl.appendChild(el("p", { class: "status-panel__title", text: t("hoursTitle") }));
+    statusPanelEl.appendChild(list);
+  }
+
+  /** Testo orario di un giorno: "07:30–24:00" oppure "chiuso". */
+  function slotText(slot) {
+    return slot ? shownTime(slot.open, false) + "–" + shownTime(slot.close, true) : t("closedDay");
+  }
+
+  /** Elenco orari (dl): giorni consecutivi con orari identici raggruppati ("Mar–Mer 07:30–23:00"); null senza orari. */
+  function buildHoursList() {
+    var hours = weekHours();
+    if (!hours) return null;
+    var today = currentDay();
+    var rows = [];
+    var start = 0;
+    while (start < 7) {
+      var end = start;
+      while (end + 1 < 7 && slotText(hours[end + 1]) === slotText(hours[start])) end++;
+      var label = start === end ? dayName(start, "short") : dayName(start, "short") + "–" + dayName(end, "short");
+      var isToday = today >= start && today <= end;
+      rows.push(el("div", { class: isToday ? "hours__row hours__row--today" : "hours__row", "aria-current": isToday ? "date" : null }, [
+        el("dt", { text: label }),
+        el("dd", { text: slotText(hours[start]) })
+      ]));
+      start = end + 1;
+    }
+    return el("dl", { class: "hours__list" }, rows);
+  }
+
+  /** Orari nel footer. */
+  function renderHours() {
+    if (!hoursEl) return;
+    var list = buildHoursList();
+    hoursEl.textContent = "";
+    hoursEl.hidden = !list;
+    if (!list) return;
+    hoursEl.appendChild(el("h2", { class: "hours__title visually-hidden", text: t("hoursTitle") }));
+    hoursEl.appendChild(list);
+  }
+
+  // Pill = pulsante: apre/chiude il pannello; si chiude con clic fuori o Esc (listener registrati una volta sola)
+  if (statusEl && statusPanelEl) {
+    statusEl.addEventListener("click", function () {
+      setStatusPanel(statusPanelEl.hidden);
+    });
+    document.addEventListener("click", function (e) {
+      if (statusPanelEl.hidden) return;
+      if (statusEl.contains(e.target) || statusPanelEl.contains(e.target)) return;
+      setStatusPanel(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" || statusPanelEl.hidden) return;
+      setStatusPanel(false);
+      statusEl.focus();
+    });
+  }
+
   function applyStaticText() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function (n) {
       n.textContent = t(n.getAttribute("data-i18n"));
@@ -828,6 +1009,9 @@
       b.setAttribute("aria-pressed", b.getAttribute("data-lang") === lang ? "true" : "false");
     });
     applyLinks();
+    renderStatus();
+    renderStatusPanel();
+    renderHours();
   }
 
   /** Cambia lingua mantenendo sezione attiva e posizione di scroll, senza animazioni. */
@@ -941,4 +1125,6 @@
   renderTabs();
   syncFromHash(true);
   setupLanguageModal(); // dopo il rendering del menu
+  // Pill di stato e giorno evidenziato (pannello e footer) si aggiornano ogni minuto (senza ridisegnare il menu)
+  window.setInterval(function () { renderStatus(); renderStatusPanel(); renderHours(); }, 60000);
 })();
