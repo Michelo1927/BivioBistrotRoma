@@ -77,7 +77,7 @@ window.BIVIO_MENU = Object.freeze({
     // Link di contatto: incolla qui gli URL definitivi. Stringa vuota = pulsante mostrato come "in arrivo" (non cliccabile).
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
-      whatsapp: "https://wa.me/3780670878"   // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
+      whatsapp: "https://wa.me/393780670878"  // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
     }
   },
 
