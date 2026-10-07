@@ -1491,9 +1491,6 @@
     });
     document.documentElement.lang = lang;
     document.title = t("pageTitle");
-    Array.prototype.forEach.call(document.querySelectorAll(".lang-switch__btn"), function (b) {
-      b.setAttribute("aria-pressed", b.getAttribute("data-lang") === lang ? "true" : "false");
-    });
     applyLinks();
     applyContacts();
     renderLegal();
@@ -1531,11 +1528,13 @@
     window.scrollTo({ top: y, behavior: "instant" }); // "instant": "auto" seguirebbe scroll-behavior: smooth del CSS
   }
 
-  Array.prototype.forEach.call(document.querySelectorAll(".lang-switch__btn"), function (b) {
-    b.addEventListener("click", function () { setLanguage(b.getAttribute("data-lang")); });
-  });
+  // ---------------------------------------------------------------- Modale scelta lingua (primo accesso + pulsante in alto)
+  var langModalEl = document.querySelector(".lang-modal");
+  var langOpenEl = document.querySelector(".lang-open");
+  var langModalReady = false;
+  var langModalClosing = false;
+  var langModalOpener = null; // pulsante che ha aperto il modale (null al primo accesso): riceve il focus alla chiusura
 
-  // ---------------------------------------------------------------- Modale scelta lingua (primo accesso)
   /** true se esiste una scelta esplicita: ?lang= valido oppure valore valido in localStorage. */
   function hasExplicitLanguage() {
     try {
@@ -1549,43 +1548,48 @@
     return false;
   }
 
-  function setupLanguageModal() {
-    var dialog = document.querySelector(".lang-modal");
-    if (!dialog || typeof window.HTMLDialogElement === "undefined" || typeof dialog.showModal !== "function") return;
-    if (hasExplicitLanguage()) return;
+  function langModalSupported() {
+    return !!langModalEl && typeof window.HTMLDialogElement !== "undefined" && typeof langModalEl.showModal === "function";
+  }
 
-    var root = document.documentElement;
-    var closing = false;
-
-    /** Chiusura con fade-out (classe .is-closing); animationend + timeout di sicurezza. */
-    function closeModal() {
-      if (closing || !dialog.open) return;
-      closing = true;
-      var done = false;
-      function finish() {
-        if (done) return;
-        done = true;
-        dialog.removeEventListener("animationend", onEnd);
-        dialog.classList.remove("is-closing");
-        if (dialog.open) dialog.close();
-        root.classList.remove("is-modal-open"); // subito, senza attendere l'evento close
-      }
-      function onEnd(e) { if (e.target === dialog && e.animationName === "lang-modal-out") finish(); }
-      dialog.addEventListener("animationend", onEnd);
-      dialog.classList.add("is-closing");
-      window.setTimeout(finish, 400);
+  /** Chiusura con fade-out (classe .is-closing); animationend + timeout di sicurezza. */
+  function closeLanguageModal() {
+    var dialog = langModalEl;
+    if (langModalClosing || !dialog.open) return;
+    langModalClosing = true;
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      dialog.removeEventListener("animationend", onEnd);
+      dialog.classList.remove("is-closing");
+      if (dialog.open) dialog.close();
+      document.documentElement.classList.remove("is-modal-open"); // subito, senza attendere l'evento close
     }
+    function onEnd(e) { if (e.target === dialog && e.animationName === "lang-modal-out") finish(); }
+    dialog.addEventListener("animationend", onEnd);
+    dialog.classList.add("is-closing");
+    window.setTimeout(finish, 400);
+  }
 
-    // Sblocca lo scroll a qualsiasi chiusura
+  /** Listener del modale: registrati una sola volta, alla prima apertura. */
+  function setupLanguageModal() {
+    if (langModalReady) return;
+    langModalReady = true;
+    var dialog = langModalEl;
+
+    // A qualsiasi chiusura: sblocca lo scroll e riporta il focus al pulsante che ha aperto (se c'è)
     dialog.addEventListener("close", function () {
-      root.classList.remove("is-modal-open");
-      closing = false;
+      document.documentElement.classList.remove("is-modal-open");
+      langModalClosing = false;
+      if (langModalOpener && document.contains(langModalOpener)) langModalOpener.focus({ preventScroll: true });
+      langModalOpener = null;
     });
 
-    /** Esc o click sul backdrop: conferma la lingua corrente (default it) così il modale non ricompare. */
+    /** Esc o click sul backdrop: conferma la lingua corrente (default it) così il modale non ricompare da solo. */
     function dismiss() {
       try { localStorage.setItem(STORAGE_KEY, lang); } catch (e) { /* non critico */ }
-      closeModal();
+      closeLanguageModal();
     }
     dialog.addEventListener("cancel", function (e) { e.preventDefault(); dismiss(); });
     dialog.addEventListener("click", function (e) { if (e.target === dialog) dismiss(); });
@@ -1593,21 +1597,44 @@
     Array.prototype.forEach.call(dialog.querySelectorAll("[data-lang]"), function (b) {
       b.addEventListener("click", function () {
         setLanguage(b.getAttribute("data-lang")); // salva in localStorage
-        closeModal();
+        closeLanguageModal();
       });
     });
+  }
 
-    root.classList.add("is-modal-open");
+  /**
+   * Apre il modale di scelta lingua. `opener`: il pulsante in alto (riceve il focus alla chiusura e fa evidenziare
+   * la lingua attiva); null al primo accesso, quando nessuna lingua deve sembrare già scelta.
+   */
+  function openLanguageModal(opener) {
+    if (!langModalSupported() || langModalEl.open) return;
+    setupLanguageModal();
+    langModalOpener = opener || null;
+    Array.prototype.forEach.call(langModalEl.querySelectorAll("[data-lang]"), function (b) {
+      if (opener && b.getAttribute("data-lang") === lang) b.setAttribute("aria-current", "true");
+      else b.removeAttribute("aria-current");
+    });
+    document.documentElement.classList.add("is-modal-open");
     try {
-      dialog.showModal();
+      langModalEl.showModal();
     } catch (e) {
-      root.classList.remove("is-modal-open");
+      document.documentElement.classList.remove("is-modal-open");
+      langModalOpener = null;
       return;
     }
     // Focus iniziale sul pannello, non su un pulsante: l'anello di focus sembrerebbe una lingua
     // già preselezionata. Con Tab si passa subito a "Italiano" / "English".
-    var panel = dialog.querySelector(".lang-modal__panel");
+    var panel = langModalEl.querySelector(".lang-modal__panel");
     if (panel) panel.focus({ preventScroll: true });
+  }
+
+  if (langOpenEl) {
+    langOpenEl.addEventListener("click", function () {
+      if (langModalSupported()) { openLanguageModal(langOpenEl); return; }
+      // Nessun <dialog> modale: il pulsante passa direttamente alla lingua successiva
+      var codes = MENU.meta.languages || [];
+      if (codes.length) setLanguage(codes[(codes.indexOf(lang) + 1) % codes.length]);
+    });
   }
 
   lang = detectLanguage();
@@ -1615,7 +1642,7 @@
   renderTabs();
   syncFromHash(true);
   syncPrivacyFromHash(); // #privacy all'avvio
-  setupLanguageModal(); // dopo il rendering del menu
+  if (!hasExplicitLanguage()) openLanguageModal(null); // primo accesso, dopo il rendering del menu
   // Pill di stato e giorno evidenziato (pannello e footer) si aggiornano ogni minuto (senza ridisegnare il menu)
   window.setInterval(function () { renderStatus(); renderStatusPanel(); renderHours(); }, 60000);
 })();

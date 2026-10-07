@@ -180,7 +180,7 @@ window.BIVIO_MENU = Object.freeze({
       frozenMark: "Frozen product",
       seeSelection: "see the selection in Spirits",
       hoursTitle: "Opening hours", openNow: "Open", closedNow: "Closed",
-      closesAt: "closes at {t}", opensAt: "opens at {t}", opensTomorrow: "opens tomorrow at {t}",
+      closesAt: "closes at {t}", opensAt: "opens at {t}", opensTomorrow: "opens tomorrow {t}",
       opensOn: "opens {d} at {t}", closedDay: "closed",
       pagerLabel: "More categories",
       privacyLink: "Privacy", privacyTitle: "Privacy notice", privacyUpdated: "Last updated: {d}",

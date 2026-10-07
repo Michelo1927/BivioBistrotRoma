@@ -138,7 +138,7 @@ data { font-variant-numeric: tabular-nums; }
 .site-header {
   position: relative; /* ancora per il selettore lingua */
   text-align: center;
-  padding: clamp(56px, 10vw, 96px) var(--gutter) clamp(52px, 9vw, 80px); /* in basso c'è posto per l'onda */
+  padding: clamp(64px, 10vw, 96px) var(--gutter) clamp(52px, 9vw, 80px); /* in alto c'è la barra, in basso c'è posto per l'onda */
   background: var(--brand-cream);
 }
 .site-header__overline {
@@ -156,13 +156,24 @@ data { font-variant-numeric: tabular-nums; }
   height: auto;
   margin: 0 auto;
 }
-/* Pulsanti Maps / WhatsApp */
+/* Barra in alto: pill di stato a sinistra; link rapidi e lingua a destra */
+.site-header__bar {
+  position: absolute;
+  top: 12px;
+  left: var(--gutter);
+  right: var(--gutter);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 36px;
+}
+/* Link rapidi Maps / WhatsApp / foto del locale: solo icona */
 .site-header__actions {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: .5rem;
-  margin-top: 1.4rem;
+  flex: none;
+  gap: .375rem;
+  margin-left: auto;      /* staccati dalla pill di stato: stanno a destra */
+  padding-left: .5rem;    /* distanza minima dalla pill quando la barra è piena (telefoni) */
 }
 .pill-link {
   display: inline-flex;
@@ -181,6 +192,13 @@ data { font-variant-numeric: tabular-nums; }
   transition: border-color .2s var(--ease);
 }
 .pill-link svg { flex: 0 0 auto; color: var(--accent); }
+/* Solo icona: cerchio da 32px (il nome resta per gli screen reader) */
+.pill-link--icona {
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+}
 /* Pillola "Il locale": e' un <button> */
 .pill-link--gallery { cursor: pointer; }
 .pill-link--gallery[hidden] { display: none; }
@@ -188,22 +206,18 @@ data { font-variant-numeric: tabular-nums; }
 a.pill-link[href]:hover { border-color: var(--accent); }
 .pill-link[aria-disabled="true"] { opacity: .45; cursor: not-allowed; }
 
-/* Pill di stato (aperto/chiuso): in alto a sinistra, speculare al selettore lingua.
-   28px + 4px di margine = centrata otticamente sui bottoni lingua da 36px */
+/* Pill di stato (aperto/chiuso): prima voce della barra; se lo spazio non basta si restringe (testo con i puntini) */
 .status-pill {
-  position: absolute;
-  top: 12px;
-  left: var(--gutter);
   display: inline-flex;
+  flex: 0 1 auto;
+  min-width: 0;
   align-items: center;
   gap: .4rem;
-  height: 28px;
-  margin: 4px 0 0;
-  padding: 0 .75rem;
+  height: 32px;
+  padding: 0 1rem;
   border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
   border-radius: 999px;
   color: var(--ink);
-  max-width: calc(100% - 2 * var(--gutter) - 100px); /* pill + selettore lingua (~90px a destra) non devono toccarsi */
   background: transparent;
   cursor: pointer;
   font-size: .75rem;
@@ -263,36 +277,15 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   to { opacity: 1; transform: none; }
 }
 
-/* Selettore lingua: in alto a destra, non sticky */
-.lang-switch {
-  position: absolute;
-  top: 12px;
-  right: var(--gutter);
-  display: flex;
-  align-items: center;
+/* Lingua: ultimo pulsante della barra, un po' staccato dai link rapidi; apre il modale di scelta lingua */
+.lang-open { flex: none; margin-left: .375rem; border-color: transparent; cursor: pointer; } /* niente cerchio: il bordo lo ha la bandiera */
+.lang-open:hover .lang-open__flag { box-shadow: 0 0 0 1px var(--accent); }
+/* Bandiera a due metà (italiana / inglese): angoli arrotondati e filetto, per staccare il bianco dal fondo crema */
+.lang-open__flag {
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent);
+  transition: box-shadow .2s var(--ease);
 }
-.lang-switch__btn {
-  min-width: 36px;
-  min-height: 36px;
-  padding: 0 .5rem;
-  border: 0;
-  background: transparent;
-  color: var(--muted);
-  font-size: .75rem;
-  font-weight: 500;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  transition: color .2s var(--ease);
-}
-.lang-switch__btn:hover { color: var(--ink); }
-.lang-switch__btn[aria-pressed="true"] {
-  color: var(--ink);
-  text-decoration: underline;
-  text-decoration-color: var(--accent);
-  text-decoration-thickness: 1px;
-  text-underline-offset: .45em;
-}
-.lang-switch__sep { width: 1px; height: 14px; background: color-mix(in srgb, var(--brand) 30%, transparent); }
 
 /* ---------- Onda e bollicine (bordo tra intestazione e menu) ---------- */
 /* Il fondo del menu risale nell'intestazione con un'onda sola, lunga e bassa; poche bollicine sottili
@@ -1451,7 +1444,20 @@ html.is-modal-open { overflow: hidden; }
 @media (max-width: 380px) {
   .tab { padding: .5rem .85rem; font-size: .78rem; }
   .dish__name { font-size: 1.25rem; }
-  .status-pill { padding: 0 .6rem; font-size: .6875rem; }
+  .status-pill { padding: 0 .7rem; }
+}
+
+/* ---------- Barra in alto: più compatta sui telefoni, per far stare il testo della pill di stato ---------- */
+/* Sotto i 380px sparisce anche la freccina della pill: il testo più lungo ("Chiuso · apre domani alle 07:30") entra a 360px */
+@media (max-width: 379.98px) {
+  .status-pill__chevron { display: none; }
+}
+@media (max-width: 519.98px) {
+  .site-header__bar { gap: .3rem; }
+  .site-header__actions { gap: .25rem; padding-left: .4rem; }
+  .pill-link--icona { width: 30px; height: 30px; }
+  .lang-open { margin-left: .25rem; }
+  .status-pill { gap: .3rem; height: 30px; padding: 0 .8rem; font-size: .6875rem; letter-spacing: 0; }
 }
 
 /* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
@@ -1460,15 +1466,9 @@ html.is-modal-open { overflow: hidden; }
   .tab { min-height: 36px; padding: .4rem .6rem; font-size: .75rem; letter-spacing: 0; }
 }
 
-/* ---------- Header: le tre pill restano su una riga sotto i 400px ---------- */
-@media (max-width: 399.98px) {
-  .site-header__actions { gap: .35rem; }
-  .pill-link { gap: .35rem; padding: .55rem .7rem; font-size: .78rem; letter-spacing: 0; }
-}
-
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
   body, .site-header { background: #fff; }
   .onda { display: none; }
   .site-header__logo { width: 200px; }
