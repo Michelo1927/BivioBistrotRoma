@@ -577,8 +577,7 @@ button.chip {
 .pager__btn {
   --pager-bg: var(--bg);
   box-sizing: border-box;
-  max-width: 48%;
-  min-width: 0;
+  min-width: 0; /* nessun tetto al 48%: i due pulsanti si dividono la riga secondo la lunghezza del nome */
   position: relative;
   isolation: isolate;
   min-height: 48px;
@@ -631,6 +630,12 @@ button.chip {
   font-weight: 500;
   line-height: 1.2;
   overflow-wrap: anywhere;
+}
+/* Telefoni stretti: testo e spazi interni ridotti, così anche la coppia più lunga ("Per Continuare" + "Insieme A") sta su una riga a 320px */
+@media (max-width: 380px) {
+  .pager__btn { padding: 12px 1.1rem 12px 1.6rem; }
+  .pager__btn--next { padding: 12px 1.6rem 12px 1.1rem; }
+  .pager__name { font-size: 1.125rem; }
 }
 
 /* ---------- Cibo ---------- */
