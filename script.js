@@ -263,6 +263,10 @@
   var activeSectionId = null;
   var NAV_TARGETS = ".category"; // blocchi che hanno una chip nella subnav e vengono osservati dallo scrollspy
   var spyObserver = null;
+  var spyOrder = [];    // id delle categorie osservate dallo scrollspy, in ordine di documento (vuoto nelle sezioni a pagine)
+  var spyVisible = {};  // id -> true se la categoria è nella fascia attiva
+  var spyLock = null;   // categoria scelta con un clic su una chip: lo scrollspy la rispetta finché l'utente non scorre
+  var spyMarked = null; // chip evidenziata dallo scrollspy (evita di rimarcarla a ogni scroll)
   var activeCategory = {}; // id sezione -> id categoria aperta (solo sezioni "paged"): tornando nella scheda si riapre l'ultima vista
   var printAll = false;    // true durante la stampa: le sezioni "paged" mostrano tutte le categorie
 
@@ -796,6 +800,11 @@
     }
 
     function scrollChip(catId) {
+      // La chip scelta resta evidenziata finché l'utente non scorre di nuovo: una categoria corta in fondo
+      // alla pagina non può arrivare in cima, e lo scrollspy da solo evidenzierebbe quella prima
+      spyLock = catId;
+      spyMarked = catId;
+      markChip(catId);
       scrollToCategory(catId);
       updateHash(section.id + "/" + catId);
     }
@@ -864,6 +873,9 @@
 
   function setupScrollSpy() {
     if (spyObserver) spyObserver.disconnect();
+    spyOrder = [];
+    spyLock = null;
+    spyMarked = null;
     var activeSection = findSection(activeSectionId);
     if (activeSection && isPaged(activeSection)) {
       // Sezione a pagine: la chip attiva è la categoria aperta, niente scrollspy
@@ -873,21 +885,49 @@
     }
     if (!("IntersectionObserver" in window)) return;
 
-    var visible = {};
     var cats = mainEl.querySelectorAll(NAV_TARGETS);
-    var order = Array.prototype.map.call(cats, function (c) { return c.id; });
+    spyVisible = {};
+    spyOrder = Array.prototype.map.call(cats, function (c) { return c.id; });
 
     spyObserver = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) { visible[entry.target.id] = entry.isIntersecting; });
-      // La prima categoria (in ordine di documento) nella fascia attiva vince
-      for (var i = 0; i < order.length; i++) {
-        if (visible[order[i]]) { markChip(order[i].replace(/^cat-/, "")); return; }
-      }
+      entries.forEach(function (entry) { spyVisible[entry.target.id] = entry.isIntersecting; });
+      spyUpdate();
     }, { rootMargin: "-" + (navHeight() + 10) + "px 0px -60% 0px" });
 
     Array.prototype.forEach.call(cats, function (c) { spyObserver.observe(c); });
-    if (order.length) markChip(order[0].replace(/^cat-/, ""));
+    if (spyOrder.length) {
+      spyMarked = spyOrder[0].replace(/^cat-/, "");
+      markChip(spyMarked);
+    }
   }
+
+  /**
+   * Sceglie la chip da evidenziare nelle sezioni a scorrimento: in fondo alla pagina l'ultima categoria
+   * (se è corta non arriva mai nella fascia attiva), altrimenti la prima categoria nella fascia attiva.
+   * Non fa nulla finché vale la scelta fatta con un clic su una chip (spyLock).
+   */
+  function spyUpdate() {
+    if (spyLock || !spyOrder.length) return;
+    var pick = null;
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      pick = spyOrder[spyOrder.length - 1];
+    } else {
+      for (var i = 0; i < spyOrder.length && !pick; i++) {
+        if (spyVisible[spyOrder[i]]) pick = spyOrder[i];
+      }
+    }
+    if (!pick) return;
+    pick = pick.replace(/^cat-/, "");
+    if (pick !== spyMarked) {
+      spyMarked = pick;
+      markChip(pick);
+    }
+  }
+
+  // Uno scorrimento fatto dall'utente (rotella, dito, tastiera, barra di scorrimento) toglie il blocco della chip scelta
+  ["wheel", "touchmove", "keydown", "mousedown"].forEach(function (type) {
+    window.addEventListener(type, function () { spyLock = null; }, { passive: true });
+  });
 
   // ---------------------------------------------------------------- Cambio sezione
   /** Ridisegna sezione attiva + subnav + scrollspy. animate=false: nessuna animazione d'ingresso. keepSubnav=true: lascia le chip esistenti (cambio categoria in una sezione a pagine). */
@@ -988,6 +1028,7 @@
   window.addEventListener("scroll", function () {
     syncToTop();
     syncPager();
+    spyUpdate();
   }, { passive: true });
   window.addEventListener("resize", syncPager);
   if (toTopEl) {
