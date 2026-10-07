@@ -481,6 +481,81 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   color: var(--muted);
 }
 
+/* ---------- Pager categorie ---------- */
+.pager {
+  display: flex;
+  justify-content: space-between;
+  gap: clamp(12px, 3vw, 24px);
+  margin-top: clamp(32px, 6vw, 56px);
+  /* Sagome del pulsante (maschere SVG, si adattano all'altezza): estremità con la punta (tondo da cui esce
+     una punta raccordata, larga 32px) ed estremità tonda (24px), ciascuna come riempimento e come contorno */
+  --punta-piena: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 48' preserveAspectRatio='none'%3E%3Cpath d='M32 .5A23.5 23.5 0 0 0 12.75 10.52C9.3 15.4 6.8 19.2 2 22.8Q.6 24 2 25.2C6.8 28.8 9.3 32.6 12.75 37.48A23.5 23.5 0 0 0 32 47.5Z'/%3E%3C/svg%3E");
+  --punta-filo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 48' preserveAspectRatio='none'%3E%3Cpath d='M32 .5A23.5 23.5 0 0 0 12.75 10.52C9.3 15.4 6.8 19.2 2 22.8Q.6 24 2 25.2C6.8 28.8 9.3 32.6 12.75 37.48A23.5 23.5 0 0 0 32 47.5' fill='none' stroke='%23000' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --tondo-pieno: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 48' preserveAspectRatio='none'%3E%3Cpath d='M0 .5A23.5 23.5 0 0 1 0 47.5Z'/%3E%3C/svg%3E");
+  --tondo-filo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 48' preserveAspectRatio='none'%3E%3Cpath d='M0 .5A23.5 23.5 0 0 1 0 47.5' fill='none' stroke='%23000' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  /* Tratti dritti sopra e sotto: SVG come le curve, così il contorno ha lo stesso spessore ovunque */
+  --dritto-filo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 48' preserveAspectRatio='none'%3E%3Cpath d='M0 .5H10M0 47.5H10' fill='none' stroke='%23000' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+/* Il pulsante non ha bordo né sfondo propri: fondo (::before) e contorno (::after) sono due livelli ritagliati
+   con le sagome qui sopra, così il profilo è un tracciato unico. Disegnato con la punta a sinistra (precedente),
+   specchiato per la successiva. */
+.pager__btn {
+  --pager-bg: var(--bg);
+  box-sizing: border-box;
+  max-width: 48%;
+  min-width: 0;
+  position: relative;
+  isolation: isolate;
+  min-height: 48px;
+  padding: 12px 1.5rem 12px 2rem;
+  border: 0;
+  border-radius: 24px; /* solo per l'outline del focus */
+  background: none;
+  color: var(--brand);
+  text-align: center;
+  cursor: pointer;
+  transition: color .2s var(--ease);
+}
+/* Successiva = azione principale (piena, come la tab attiva); precedente = secondaria (solo contorno) */
+.pager__btn--next {
+  --pager-bg: var(--brand);
+  margin-left: auto;
+  padding: 12px 2rem 12px 1.5rem;
+  color: var(--brand-cream);
+}
+.pager__btn::before,
+.pager__btn::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+}
+.pager__btn::before {
+  background: var(--pager-bg);
+  transition: background-color .2s var(--ease);
+  -webkit-mask: var(--punta-piena) left top / 32px 100% no-repeat, var(--tondo-pieno) right top / 24px 100% no-repeat, linear-gradient(#000, #000) 29px top / calc(100% - 50px) 100% no-repeat;
+  mask: var(--punta-piena) left top / 32px 100% no-repeat, var(--tondo-pieno) right top / 24px 100% no-repeat, linear-gradient(#000, #000) 29px top / calc(100% - 50px) 100% no-repeat;
+}
+.pager__btn::after {
+  background: var(--brand);
+  -webkit-mask: var(--punta-filo) left top / 32px 100% no-repeat, var(--tondo-filo) right top / 24px 100% no-repeat, var(--dritto-filo) 29px top / calc(100% - 50px) 100% no-repeat;
+  mask: var(--punta-filo) left top / 32px 100% no-repeat, var(--tondo-filo) right top / 24px 100% no-repeat, var(--dritto-filo) 29px top / calc(100% - 50px) 100% no-repeat;
+}
+.pager__btn--next::before,
+.pager__btn--next::after { transform: scaleX(-1); }
+.pager__btn:hover {
+  --pager-bg: var(--brand-cream);
+  color: var(--brand);
+}
+.pager__name {
+  display: block;
+  font-family: var(--serif);
+  font-size: 1.25rem;
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- Cibo ---------- */
 .dish-grid {
   display: grid;
@@ -1184,7 +1259,7 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .site-header__actions, .lang-modal, .lightbox { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox { display: none !important; }
   body, .site-header { background: #fff; }
   .site-header__logo { width: 200px; }
   .site-header { padding: 0 0 1rem; }

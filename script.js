@@ -263,6 +263,8 @@
   var activeSectionId = null;
   var NAV_TARGETS = ".category, .menu-info"; // blocchi che hanno una chip nella subnav e vengono osservati dallo scrollspy
   var spyObserver = null;
+  var activeCategory = {}; // id sezione -> id categoria aperta (solo sezioni "paged"): tornando nella scheda si riapre l'ultima vista
+  var printAll = false;    // true durante la stampa: le sezioni "paged" mostrano tutte le categorie
 
   function findSection(id) {
     for (var i = 0; i < MENU.sections.length; i++) {
@@ -286,6 +288,32 @@
     } catch (e) {
       /* file:// in alcuni browser può rifiutare replaceState: non è critico */
     }
+  }
+
+  // ---------------------------------------------------------------- Sezioni a pagine
+  /** Voci di una categoria (array sorgente scelto dal tipo di sezione, filtrato per categoria). */
+  function categoryItems(section, cat) {
+    var source = section.type === "food" ? MENU.dishes : section.type === "list2" ? MENU[section.source] : MENU.spirits;
+    return (source || []).filter(function (item) { return item.category === cat.id; });
+  }
+
+  /** Categorie nell'ordine di rendering, solo quelle con almeno una voce. */
+  function visibleCategories(section) {
+    return orderedCategories(section).filter(function (cat) { return categoryItems(section, cat).length > 0; });
+  }
+
+  /** true se la sezione mostra una categoria alla volta (non durante la stampa). */
+  function isPaged(section) {
+    return section.paged === true && !printAll;
+  }
+
+  /** Categoria aperta di una sezione a pagine: quella ricordata se valida, altrimenti la prima; null se non ce ne sono. */
+  function currentCategory(section) {
+    var cats = visibleCategories(section);
+    for (var i = 0; i < cats.length; i++) {
+      if (cats[i].id === activeCategory[section.id]) return cats[i];
+    }
+    return cats.length ? cats[0] : null;
   }
 
   // ---------------------------------------------------------------- Immagini
@@ -506,8 +534,7 @@
 
   /** Renderizza una categoria; restituisce null se non contiene voci. */
   function renderCategory(section, cat, index) {
-    var source = section.type === "food" ? MENU.dishes : section.type === "list2" ? MENU[section.source] : MENU.spirits;
-    var items = (source || []).filter(function (item) { return item.category === cat.id; });
+    var items = categoryItems(section, cat);
     if (!items.length) return null;
 
     var titleId = "title-" + cat.id;
@@ -533,15 +560,49 @@
     return wrapper;
   }
 
+  /** Pager di una sezione a pagine: categoria precedente a sinistra, successiva a destra (senza ciclo); null se non c'è né la precedente né la successiva. */
+  function renderPager(section) {
+    var cats = visibleCategories(section);
+    var current = currentCategory(section);
+    var idx = -1;
+    for (var i = 0; i < cats.length; i++) {
+      if (current && cats[i].id === current.id) idx = i;
+    }
+    var prev = idx > 0 ? cats[idx - 1] : null;
+    var next = idx !== -1 && idx < cats.length - 1 ? cats[idx + 1] : null;
+    if (!prev && !next) return null;
+
+    function button(cat, dir) {
+      var btn = el("button", { type: "button", class: "pager__btn pager__btn--" + dir }, [
+        el("span", { class: "pager__name", text: tr(cat, "label") })
+      ]);
+      btn.addEventListener("click", function () { setCategory(section, cat.id, { focus: true }); });
+      return btn;
+    }
+    return el("nav", { class: "pager", "aria-label": t("pagerLabel") }, [
+      prev ? button(prev, "prev") : null,
+      next ? button(next, "next") : null
+    ]);
+  }
+
   function renderSection(section) {
     var frag = document.createDocumentFragment();
     // Nota di sezione (riquadro sobrio prima della prima categoria)
     var note = tr(section, "note");
     if (note) frag.appendChild(el("p", { class: "section-note" }, [buildInfoIcon(14), el("span", { text: note })]));
-    orderedCategories(section).forEach(function (cat, index) {
-      var node = renderCategory(section, cat, index);
-      if (node) frag.appendChild(node);
-    });
+    if (isPaged(section)) {
+      // Sezione a pagine: una sola categoria, poi il pager
+      var current = currentCategory(section);
+      var page = current ? renderCategory(section, current, 0) : null;
+      if (page) frag.appendChild(page);
+      var pager = renderPager(section);
+      if (pager) frag.appendChild(pager);
+    } else {
+      orderedCategories(section).forEach(function (cat, index) {
+        var node = renderCategory(section, cat, index);
+        if (node) frag.appendChild(node);
+      });
+    }
     // Blocco extra della Cucina: legenda allergeni dopo l'ultima categoria
     if (section.type === "food") {
       var legend = renderAllergenLegend();
@@ -598,21 +659,62 @@
   // ---------------------------------------------------------------- Subnav + scrollspy
   function renderSubnav(section) {
     subnavEl.textContent = "";
-    // Una chip per ogni blocco navigabile effettivamente renderizzato: categorie (.category) + pannelli informativi (.menu-info)
-    Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
-      var catId = node.id.replace(/^cat-/, "");
-      var isInfo = node.classList.contains("menu-info");
-      var label = node.getAttribute("data-nav-label") || catId;
-      var chip = el("a", { class: isInfo ? "chip chip--info" : "chip", href: "#" + node.id, "data-cat": catId }, isInfo ? [buildInfoIcon(12), label] : [label]);
+
+    /** Crea e aggiunge una chip; `onClick` gestisce il clic (preventDefault già fatto). */
+    function addChip(catId, label, href, isInfo, onClick) {
+      var chip = el("a", { class: isInfo ? "chip chip--info" : "chip", href: href, "data-cat": catId }, isInfo ? [buildInfoIcon(12), label] : [label]);
       chip.addEventListener("click", function (e) {
         e.preventDefault();
-        scrollToCategory(catId);
-        updateHash(section.id + "/" + catId);
+        onClick();
       });
       // Filetto verticale che stacca le chip informative da quelle delle categorie
       if (isInfo && subnavEl.children.length) subnavEl.appendChild(el("span", { class: "subnav__sep", "aria-hidden": "true" }));
       subnavEl.appendChild(chip);
+    }
+
+    function scrollChip(catId) {
+      scrollToCategory(catId);
+      updateHash(section.id + "/" + catId);
+    }
+
+    if (isPaged(section)) {
+      // Sezione a pagine: nel DOM c'è una sola categoria, quindi le chip si costruiscono dai dati; le informative vengono dal DOM
+      visibleCategories(section).forEach(function (cat) {
+        addChip(cat.id, tr(cat, "label"), "#" + section.id + "/" + cat.id, false, function () { setCategory(section, cat.id); });
+      });
+      Array.prototype.forEach.call(mainEl.querySelectorAll(".menu-info"), function (node) {
+        var catId = node.id.replace(/^cat-/, "");
+        addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, true, function () { scrollChip(catId); });
+      });
+      return;
+    }
+
+    // Una chip per ogni blocco navigabile effettivamente renderizzato: categorie (.category) + pannelli informativi (.menu-info)
+    Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
+      var catId = node.id.replace(/^cat-/, "");
+      var isInfo = node.classList.contains("menu-info");
+      addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, isInfo, function () { scrollChip(catId); });
     });
+  }
+
+  /** Porta la pagina all'inizio del menu; senza `always` non scende mai (se l'utente è ancora sull'header resta dov'è). */
+  function scrollToMenuTop(always) {
+    var y = mainEl.getBoundingClientRect().top + window.scrollY - navHeight();
+    if (always || window.scrollY > y) window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+  }
+
+  /**
+   * Apre una categoria di una sezione a pagine: ridisegna il contenuto, aggiorna l'hash e riporta in cima al menu.
+   * Le chip restano le stesse (non vengono ricreate): così il trattino della chip attiva si anima e il focus resta dov'è.
+   * opts.focus: focus su #menu (il pulsante del pager cliccato viene distrutto dal re-render).
+   */
+  function setCategory(section, catId, opts) {
+    opts = opts || {};
+    activeCategory[section.id] = catId;
+    renderActive(true, true);
+    updateHash(section.id + "/" + catId);
+    scrollToMenuTop();
+    if (opts.focus) mainEl.focus({ preventScroll: true });
   }
 
   function scrollToCategory(catId, instant) {
@@ -635,6 +737,13 @@
 
   function setupScrollSpy() {
     if (spyObserver) spyObserver.disconnect();
+    var activeSection = findSection(activeSectionId);
+    if (activeSection && isPaged(activeSection)) {
+      // Sezione a pagine: la chip attiva è la categoria aperta, niente scrollspy (evidenzierebbe "Allergeni" scorrendo)
+      var open = currentCategory(activeSection);
+      if (open) markChip(open.id);
+      return;
+    }
     if (!("IntersectionObserver" in window)) return;
 
     var visible = {};
@@ -654,8 +763,8 @@
   }
 
   // ---------------------------------------------------------------- Cambio sezione
-  /** Ridisegna sezione attiva + subnav + scrollspy. animate=false: nessuna animazione d'ingresso. */
-  function renderActive(animate) {
+  /** Ridisegna sezione attiva + subnav + scrollspy. animate=false: nessuna animazione d'ingresso. keepSubnav=true: lascia le chip esistenti (cambio categoria in una sezione a pagine). */
+  function renderActive(animate, keepSubnav) {
     var section = findSection(activeSectionId);
     if (!section) return;
     mainEl.textContent = "";
@@ -665,7 +774,7 @@
     mainEl.classList.toggle("no-anim", !animate);
     void mainEl.offsetWidth;
     mainEl.classList.add("is-entering");
-    renderSubnav(section);
+    if (!keepSubnav) renderSubnav(section);
     setupScrollSpy();
   }
 
@@ -681,20 +790,44 @@
     activeSectionId = id;
     syncTabs();
 
-    if (changed || !mainEl.firstChild || mainEl.querySelector(".menu__notice")) {
-      renderActive(true);
+    // Sezione a pagine con una categoria richiesta: la imposta prima del render
+    var pagedCat = null;
+    var catChanged = false;
+    if (isPaged(section) && opts.category) {
+      visibleCategories(section).forEach(function (cat) {
+        if (cat.id === opts.category) pagedCat = cat.id;
+      });
+      if (pagedCat) {
+        catChanged = currentCategory(section).id !== pagedCat;
+        activeCategory[id] = pagedCat;
+      }
+    }
+
+    if (changed || catChanged || !mainEl.firstChild || mainEl.querySelector(".menu__notice")) {
+      renderActive(true, !changed && catChanged && subnavEl.children.length > 0);
     }
 
     if (!opts.keepHash) updateHash(opts.category ? id + "/" + opts.category : id);
 
-    if (opts.category && document.getElementById("cat-" + opts.category)) {
+    if (pagedCat) {
+      scrollToMenuTop();
+    } else if (opts.category && document.getElementById("cat-" + opts.category)) {
       scrollToCategory(opts.category, true);
     } else if (opts.scroll && window.scrollY > topEl.offsetHeight) {
       // Portati all'inizio del menu, così il cambio tab non lascia a metà pagina
-      var y = mainEl.getBoundingClientRect().top + window.scrollY - navHeight();
-      window.scrollTo({ top: Math.max(0, y), behavior: "auto" });
+      scrollToMenuTop(true);
     }
   }
+
+  // ---------------------------------------------------------------- Stampa
+  // In stampa le sezioni a pagine mostrano tutte le categorie: il foglio non deve contenere una sola pagina del menu
+  function setPrintAll(on) {
+    var section = findSection(activeSectionId);
+    printAll = on;
+    if (section && section.paged === true) renderActive(false);
+  }
+  window.addEventListener("beforeprint", function () { setPrintAll(true); });
+  window.addEventListener("afterprint", function () { setPrintAll(false); });
 
   // ---------------------------------------------------------------- Altezza nav -> CSS var
   function updateNavHeight() {

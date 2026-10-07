@@ -15,6 +15,8 @@
  *                   priceColumns : [{ key, label }, { key, label }] -> `key` = campo prezzo della voce,
  *                                  `label` = chiave `ui` dell'intestazione colonna (es. "glass", "counter").
  *                 Campo opzionale di sezione: `note` (riquadro informativo in cima alla scheda).
+ *                 Campo opzionale di sezione: `paged: true` = la sezione mostra una categoria alla volta;
+ *                 i chip cambiano categoria e in fondo c'è il pager con la categoria precedente e la successiva.
  *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) la
  *                 categoria passa in prima posizione. `firstUntil: "HH:MM"` (opzionale) chiude la fascia;
  *                 senza, vale fino a mezzanotte; se è minore o uguale di `firstFrom` la fascia prosegue
@@ -125,7 +127,8 @@ window.BIVIO_MENU = Object.freeze({
       seeSelection: "vedi la selezione in Distillati",
       hoursTitle: "Orari", openNow: "Aperto", closedNow: "Chiuso",
       closesAt: "chiude alle {t}", opensAt: "apre alle {t}", opensTomorrow: "apre domani alle {t}",
-      opensOn: "apre {d} alle {t}", closedDay: "chiuso"
+      opensOn: "apre {d} alle {t}", closedDay: "chiuso",
+      pagerLabel: "Altre categorie"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -147,14 +150,15 @@ window.BIVIO_MENU = Object.freeze({
       seeSelection: "see the selection in Spirits",
       hoursTitle: "Opening hours", openNow: "Open", closedNow: "Closed",
       closesAt: "closes at {t}", opensAt: "opens at {t}", opensTomorrow: "opens tomorrow at {t}",
-      opensOn: "opens {d} at {t}", closedDay: "closed"
+      opensOn: "opens {d} at {t}", closedDay: "closed",
+      pagerLabel: "More categories"
     }
   },
 
   // Ordine = ordine di rendering. `type` decide il renderer.
   sections: [
     {
-      id: "cucina", label: "Cucina", en: { label: "Kitchen" }, type: "food",
+      id: "cucina", label: "Cucina", en: { label: "Kitchen" }, type: "food", paged: true,
       categories: [
         { id: "per-iniziare", label: "Per Iniziare", en: { label: "To Start" } },
         { id: "per-continuare", label: "Per Continuare", en: { label: "To Continue" } },
