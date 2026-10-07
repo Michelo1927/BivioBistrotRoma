@@ -1251,6 +1251,18 @@
     });
   }
 
+  /** Contatti nel footer: indirizzo e telefono da `meta` (l'HTML ne contiene una copia statica); il telefono diventa un link tel:. */
+  function applyContacts() {
+    var meta = MENU.meta || {};
+    var addr = document.querySelector("[data-meta='address']");
+    if (addr && meta.address) addr.textContent = meta.address;
+    var tel = document.querySelector("[data-meta='phone']");
+    if (tel && meta.phone) {
+      tel.textContent = meta.phone;
+      tel.setAttribute("href", "tel:" + meta.phone.replace(/[^\d+]/g, ""));
+    }
+  }
+
   function applyStaticText() {
     Array.prototype.forEach.call(document.querySelectorAll("[data-i18n]"), function (n) {
       n.textContent = t(n.getAttribute("data-i18n"));
@@ -1267,6 +1279,7 @@
       b.setAttribute("aria-pressed", b.getAttribute("data-lang") === lang ? "true" : "false");
     });
     applyLinks();
+    applyContacts();
     renderStatus();
     renderStatusPanel();
     renderHours();

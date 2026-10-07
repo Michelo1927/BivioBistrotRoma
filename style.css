@@ -1075,6 +1075,22 @@ button.chip {
   font-size: .875rem;
   color: var(--muted);
 }
+/* Contatti: indirizzo (apre la mappa) e telefono, uno per riga */
+.site-footer__contacts {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .35rem;
+  margin-bottom: 1rem;
+  font-style: normal;
+}
+.site-footer__contacts a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  transition: border-color .2s var(--ease);
+}
+.site-footer__contacts a:hover { border-bottom-color: var(--accent); }
 .site-footer__copy {
   margin-top: .35rem;
   font-size: .75rem;

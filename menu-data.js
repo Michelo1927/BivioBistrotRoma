@@ -69,6 +69,8 @@
  *
  * LINK DI CONTATTO
  *  meta.links.maps / meta.links.whatsapp: URL https definitivi. Stringa vuota = pulsante "in arrivo".
+ *  meta.address / meta.phone: indirizzo e telefono mostrati nel footer (l'indirizzo apre meta.links.maps,
+ *  il telefono diventa un link tel:). In index.html c'è una copia statica: se li cambi, allinea anche l'HTML.
  *
  * IMMAGINI DEI PIATTI
  *  Salva la foto come  assets/images/<category>/<id>.jpg  (rapporto 4:3, consigliato 1200x900 o 800x600, < 300 KB).
@@ -99,6 +101,8 @@ window.BIVIO_MENU = Object.freeze({
       { open: "11:30", close: "22:00" }  // dom
     ],
     // Link di contatto: incolla qui gli URL definitivi. Stringa vuota = pulsante mostrato come "in arrivo" (non cliccabile).
+    address: "Piazza Monte Grappa, 1b, 00195 Roma",
+    phone: "+39 378 067 0878",
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
       whatsapp: "https://wa.me/393780670878"  // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
