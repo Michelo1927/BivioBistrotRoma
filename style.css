@@ -64,7 +64,7 @@
 :root {
   --brand: #731223;       /* bordeaux del logo */
   --brand-cream: #FEE2B3; /* crema del logo (fondo header) */
-  --btn-bg: #883440;   /* bottoni pieni: bordeaux del logo schiarito (circa l'85% sul fondo crema) */
+  --btn-bg: #7D2230;   /* bottoni pieni: bordeaux del logo schiarito (93% sul fondo crema) */
   --btn-ink: #FFFBF3;  /* testo sui bottoni pieni: quasi bianco, più leggibile del crema */
   --bg: #FDF4E3;
   --surface: #FFFBF3;
