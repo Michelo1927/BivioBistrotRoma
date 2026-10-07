@@ -540,6 +540,143 @@
     });
   }
 
+  // ---------------------------------------------------------------- Dati legali + pop-up privacy
+  /**
+   * Dati legali { company, vat, seat, email, host, updated } oppure null ("in attesa": niente riga legale né informativa).
+   * Servono company, vat ed email compilati; `seat` vuoto = meta.address.
+   * SOLO PER DEBUG: `?anteprima=legale` nell'URL mostra comunque i dati, con "[da completare]" al posto di quelli mancanti.
+   */
+  function legalData() {
+    var meta = (MENU && MENU.meta) || {};
+    var legal = meta.legal || {};
+    function pulisci(v) { return typeof v === "string" ? v.replace(/^\s+|\s+$/g, "") : ""; }
+    var company = pulisci(legal.company), vat = pulisci(legal.vat), email = pulisci(legal.email);
+    var seat = pulisci(legal.seat) || pulisci(meta.address);
+    var host = pulisci(legal.host), updated = pulisci(legal.updated);
+    if (company && vat && email) {
+      return { company: company, vat: vat, seat: seat, email: email, host: host, updated: updated, analytics: legal.analytics === true };
+    }
+    var anteprima = false;
+    try { anteprima = new URLSearchParams(location.search).get("anteprima") === "legale"; } catch (e) { /* URLSearchParams assente */ }
+    if (!anteprima) return null;
+    var mancante = "[" + t("legalPending") + "]";
+    return { company: company || mancante, vat: vat || mancante, seat: seat || mancante, email: email || mancante, host: host || mancante, updated: updated, analytics: legal.analytics === true };
+  }
+
+  /** Riga legale nel footer ("Ragione sociale · P. IVA … · Privacy"); nascosta e vuota se i dati sono in attesa. */
+  function renderLegal() {
+    var box = document.querySelector(".site-footer__legal");
+    if (!box) return;
+    var data = legalData();
+    box.textContent = "";
+    box.hidden = !data;
+    if (!data) return;
+    var btn = el("button", { type: "button", class: "site-footer__privacy", "aria-haspopup": "dialog", text: t("privacyLink") });
+    btn.addEventListener("click", function () { openPrivacy(btn); });
+    box.appendChild(document.createTextNode(data.company + " · " + t("vatLabel") + " " + data.vat + " · "));
+    box.appendChild(btn);
+  }
+
+  // ---- Pop-up privacy
+  var privacyModalEl = document.querySelector(".privacy-modal");
+  var privacyState = { open: false };
+  var privacyReady = false;
+  var privacyOpener = null; // elemento che ha aperto il pop-up: riceve il focus alla chiusura
+
+  /** Data "AAAA-MM-GG" nella lingua corrente ("7 ottobre 2026"); stringa grezza se il formato non è valido. */
+  function formatLegalDate(s) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(s || ""));
+    if (!m) return s || "";
+    try {
+      var d = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
+      return new Intl.DateTimeFormat(locale(), { day: "numeric", month: "long", year: "numeric" }).format(d);
+    } catch (e) { return s; }
+  }
+
+  /** Sostituisce i segnaposto {company} {vat} {seat} {email} {host} in `text` (solo testo, niente HTML). */
+  function fillLegal(text, data) {
+    ["company", "vat", "seat", "email", "host"].forEach(function (k) {
+      text = text.split("{" + k + "}").join(data[k]);
+    });
+    return text;
+  }
+
+  /** Ricostruisce il contenuto del pop-up privacy nella lingua corrente. */
+  function renderPrivacyModal() {
+    var panel = privacyModalEl && privacyModalEl.querySelector(".privacy-modal__panel");
+    var data = legalData();
+    if (!panel || !data) return;
+    panel.textContent = "";
+
+    var closeBtn = el("button", { type: "button", class: "privacy-modal__close", "aria-label": t("close") }, [buildCloseIcon(24)]);
+    closeBtn.addEventListener("click", function () { privacyModalEl.close(); });
+    panel.appendChild(closeBtn);
+    panel.appendChild(el("h2", { class: "privacy-modal__title", id: "privacy-modal-title", text: t("privacyTitle") }));
+
+    var testi = (MENU.privacy && (MENU.privacy[lang] || MENU.privacy.it)) || [];
+    testi.forEach(function (sezione) {
+      panel.appendChild(el("h3", { class: "privacy-modal__h", text: fillLegal(sezione.h, data) }));
+      (sezione.p || []).forEach(function (par) {
+        // Paragrafo a due versioni: dipende da meta.legal.analytics (statistiche Cloudflare accese o no)
+        if (typeof par !== "string") par = (data.analytics ? par.analytics : par.noAnalytics) || "";
+        panel.appendChild(el("p", { text: fillLegal(par, data) }));
+      });
+    });
+
+    if (data.updated) {
+      panel.appendChild(el("p", { class: "privacy-modal__data", text: fmt("privacyUpdated", "", formatLegalDate(data.updated)) }));
+    }
+  }
+
+  /** Apre il pop-up privacy (non fa nulla se i dati legali sono in attesa). `opener` riceve il focus alla chiusura. */
+  function openPrivacy(opener) {
+    if (!privacyModalEl || !legalData()) return;
+    setupPrivacyModal();
+    if (privacyState.open) return;
+    privacyOpener = opener || document.activeElement;
+    renderPrivacyModal();
+    privacyState.open = true;
+    if (typeof privacyModalEl.showModal === "function") {
+      document.documentElement.classList.add("is-modal-open");
+      try { privacyModalEl.showModal(); } catch (e) {
+        document.documentElement.classList.remove("is-modal-open");
+        privacyModalEl.setAttribute("open", "");
+      }
+    } else {
+      // Nessun <dialog> modale: l'informativa deve comunque essere leggibile
+      privacyModalEl.setAttribute("open", "");
+    }
+    var panel = privacyModalEl.querySelector(".privacy-modal__panel");
+    if (panel) panel.focus({ preventScroll: true });
+  }
+
+  /** Listener del pop-up privacy: registrati una sola volta, alla prima apertura. */
+  function setupPrivacyModal() {
+    if (privacyReady) return;
+    privacyReady = true;
+    // Alla chiusura (Esc, X o sfondo): sblocca lo scroll, toglie #privacy dall'URL e riporta il focus
+    privacyModalEl.addEventListener("close", function () {
+      privacyState.open = false;
+      document.documentElement.classList.remove("is-modal-open");
+      if (location.hash === "#privacy") {
+        try { history.replaceState(null, "", location.pathname + location.search); } catch (e) { /* file://: non critico */ }
+      }
+      // Il pulsante del footer viene ricreato a ogni cambio lingua: se l'opener non c'è più si cerca quello attuale
+      var target = privacyOpener && document.contains(privacyOpener) ? privacyOpener : document.querySelector(".site-footer__privacy");
+      if (target && typeof target.focus === "function") target.focus({ preventScroll: true });
+      privacyOpener = null;
+    });
+    // Click sullo sfondo: il padding sta sul pannello, quindi e.target === dialog solo fuori dal pannello
+    privacyModalEl.addEventListener("click", function (e) {
+      if (e.target === privacyModalEl) privacyModalEl.close();
+    });
+  }
+
+  /** Hash esattamente "#privacy": apre il pop-up (se i dati legali ci sono). */
+  function syncPrivacyFromHash() {
+    if (location.hash === "#privacy" && legalData()) openPrivacy(document.querySelector(".site-footer__privacy"));
+  }
+
   // ---------------------------------------------------------------- Renderer
   function renderDish(d, i) {
     // Senza image né placeholder: card solo testo, nessun riquadro
@@ -1200,6 +1337,7 @@
   // Ignora hash che non puntano a una sezione (es. ancore interne)
   window.addEventListener("hashchange", function () {
     if (parseHash().section) syncFromHash(false);
+    syncPrivacyFromHash();
   });
 
   // ---------------------------------------------------------------- Testi statici + link
@@ -1351,6 +1489,7 @@
     });
     applyLinks();
     applyContacts();
+    renderLegal();
     renderStatus();
     renderStatusPanel();
     renderHours();
@@ -1377,6 +1516,7 @@
     applyStaticText();
     syncGallery();
     if (allergenState.open) renderAllergenModal(allergenState.dish); // cambio lingua con pop-up allergeni aperto
+    if (privacyState.open) renderPrivacyModal(); // idem per il pop-up privacy
     if (opts.initial || !changed) return;
     var y = window.scrollY;
     renderTabs();
@@ -1467,6 +1607,7 @@
   setLanguage(lang, { initial: true });
   renderTabs();
   syncFromHash(true);
+  syncPrivacyFromHash(); // #privacy all'avvio
   setupLanguageModal(); // dopo il rendering del menu
   // Pill di stato e giorno evidenziato (pannello e footer) si aggiornano ogni minuto (senza ridisegnare il menu)
   window.setInterval(function () { renderStatus(); renderStatusPanel(); renderHours(); }, 60000);

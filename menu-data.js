@@ -71,6 +71,17 @@
  *  meta.links.maps / meta.links.whatsapp: URL https definitivi. Stringa vuota = pulsante "in arrivo".
  *  meta.address / meta.phone: indirizzo e telefono mostrati nel footer (l'indirizzo apre meta.links.maps,
  *  il telefono diventa un link tel:). In index.html c'è una copia statica: se li cambi, allinea anche l'HTML.
+ *  meta.legal: { company, vat, seat, email, host, updated }. Ragione sociale e partita IVA compaiono nel footer e
+ *  alimentano l'informativa privacy (pop-up aperto dal link "Privacy" nel footer o da #privacy). Regola "in attesa":
+ *  finché company, vat ed email non sono TUTTI compilati, la riga legale e il link Privacy non compaiono e #privacy
+ *  non apre nulla. `seat` vuoto = si usa meta.address. `host` e `updated` (AAAA-MM-GG) compaiono nell'informativa.
+ *  Solo per debug: `?anteprima=legale` nell'URL mostra riga e pop-up con "[da completare]" al posto dei dati mancanti.
+ *
+ * INFORMATIVA PRIVACY
+ *  privacy: { it: [ { h, p: [paragrafo, ...] }, ... ], en: [ ... ] } = sezioni dell'informativa per lingua
+ *  (titolo `h` + paragrafi `p`). Un paragrafo può essere { noAnalytics, analytics }: si usa il secondo testo
+ *  quando meta.legal.analytics è true (statistiche Cloudflare accese), altrimenti il primo. Nei paragrafi i segnaposto {company}, {vat}, {seat}, {email}, {host} vengono
+ *  sostituiti con i valori di meta.legal. Se manca una lingua si usa l'italiano. Se cambi il testo, aggiorna meta.legal.updated.
  *
  * IMMAGINI DEI PIATTI
  *  Salva la foto come  assets/images/<category>/<id>.jpg  (rapporto 4:3, consigliato 1200x900 o 800x600, < 300 KB).
@@ -103,6 +114,16 @@ window.BIVIO_MENU = Object.freeze({
     // Link di contatto: incolla qui gli URL definitivi. Stringa vuota = pulsante mostrato come "in arrivo" (non cliccabile).
     address: "Piazza Monte Grappa, 1b, 00195 Roma",
     phone: "+39 378 067 0878",
+    // Dati legali: finché company, vat ed email non sono tutti compilati, riga legale e informativa privacy restano nascoste.
+    legal: {
+      company: "",   // ragione sociale esatta, es. "Bivio S.r.l."
+      vat: "",       // partita IVA, solo le 11 cifre
+      seat: "",      // sede legale; lascia vuoto se coincide con `address`
+      email: "",     // contatto per le richieste sulla privacy
+      host: "Cloudflare Pages – Cloudflare, Inc.",  // fornitore che ospita il sito (compare nell'informativa)
+      analytics: false,  // true = Cloudflare Web Analytics è accesa (dal pannello Cloudflare): cambia la frase dell'informativa. Non accende le statistiche.
+      updated: "2026-10-07"  // data dell'informativa (AAAA-MM-GG): aggiornala quando cambi i dati o il testo
+    },
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
       whatsapp: "https://wa.me/393780670878"  // es. "https://wa.me/39XXXXXXXXXX" (numero con prefisso, senza + né spazi)
@@ -134,7 +155,9 @@ window.BIVIO_MENU = Object.freeze({
       hoursTitle: "Orari", openNow: "Aperto", closedNow: "Chiuso",
       closesAt: "chiude alle {t}", opensAt: "apre alle {t}", opensTomorrow: "apre domani alle {t}",
       opensOn: "apre {d} alle {t}", closedDay: "chiuso",
-      pagerLabel: "Altre categorie"
+      pagerLabel: "Altre categorie",
+      privacyLink: "Privacy", privacyTitle: "Informativa sulla privacy", privacyUpdated: "Ultimo aggiornamento: {d}",
+      vatLabel: "P. IVA", legalPending: "da completare"
     },
     en: {
       tagline: "Seasonal kitchen, wines and spirits", skip: "Skip to menu", navLabel: "Menu sections",
@@ -159,8 +182,60 @@ window.BIVIO_MENU = Object.freeze({
       hoursTitle: "Opening hours", openNow: "Open", closedNow: "Closed",
       closesAt: "closes at {t}", opensAt: "opens at {t}", opensTomorrow: "opens tomorrow at {t}",
       opensOn: "opens {d} at {t}", closedDay: "closed",
-      pagerLabel: "More categories"
+      pagerLabel: "More categories",
+      privacyLink: "Privacy", privacyTitle: "Privacy notice", privacyUpdated: "Last updated: {d}",
+      vatLabel: "VAT no.", legalPending: "to be completed"
     }
+  },
+
+  // Informativa privacy (vedi lo schema in testa al file). Segnaposto: {company} {vat} {seat} {email} {host}
+  privacy: {
+    it: [
+      { h: "Titolare del trattamento", p: [
+        "{company}, partita IVA {vat}, con sede in {seat}.",
+        "Per qualsiasi richiesta sulla privacy puoi scrivere a {email}."
+      ] },
+      { h: "Quali dati trattiamo", p: [
+        {
+          noAnalytics: "Questo sito serve solo a consultare il menu. Non ha moduli, registrazioni, statistiche né pubblicità, e non usa cookie.",
+          analytics: "Questo sito serve solo a consultare il menu. Non ha moduli, registrazioni né pubblicità, e non usa cookie. Raccogliamo solo statistiche aggregate e anonime sulle visite (pagine viste, provenienza, tipo di dispositivo) con Cloudflare Web Analytics, che non usa cookie e non ti identifica."
+        },
+        "Come per ogni sito, il fornitore che lo ospita ({host}) registra nei propri log tecnici l'indirizzo IP e alcuni dati del browser di chi lo visita, per farlo funzionare e proteggerlo. Noi non usiamo questi dati per identificarti. La base giuridica è il legittimo interesse a far funzionare il sito in sicurezza (art. 6, par. 1, lett. f del GDPR)."
+      ] },
+      { h: "Cosa salviamo sul tuo dispositivo", p: [
+        "Solo la lingua che scegli (italiano o inglese), nella memoria del browser, per non chiedertela a ogni visita. Non serve a profilarti e non richiede consenso. Puoi cancellarla dalle impostazioni del browser."
+      ] },
+      { h: "Link esterni", p: [
+        "I pulsanti Mappa e WhatsApp e il numero di telefono aprono servizi esterni (Google Maps, WhatsApp, l'app del telefono), che trattano i tuoi dati secondo le proprie informative. Se ci scrivi o ci chiami, usiamo i tuoi dati solo per risponderti."
+      ] },
+      { h: "I tuoi diritti", p: [
+        "Puoi chiedere in ogni momento l'accesso ai tuoi dati, la rettifica, la cancellazione, la limitazione o l'opposizione al trattamento scrivendo a {email}.",
+        "Hai anche il diritto di presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it)."
+      ] }
+    ],
+    en: [
+      { h: "Data controller", p: [
+        "{company}, VAT no. {vat}, registered office at {seat}.",
+        "For any privacy request you can write to {email}."
+      ] },
+      { h: "What data we process", p: [
+        {
+          noAnalytics: "This website only lets you browse the menu. It has no forms, sign-ups, analytics or advertising, and it uses no cookies.",
+          analytics: "This website only lets you browse the menu. It has no forms, sign-ups or advertising, and it uses no cookies. We only collect aggregate, anonymous visit statistics (pages viewed, referrer, device type) with Cloudflare Web Analytics, which uses no cookies and does not identify you."
+        },
+        "As with any website, the hosting provider ({host}) records the IP address and some browser data of visitors in its technical logs, in order to run and protect the site. We do not use this data to identify you. The legal basis is our legitimate interest in running the site securely (Art. 6(1)(f) GDPR)."
+      ] },
+      { h: "What we store on your device", p: [
+        "Only the language you choose (Italian or English), in your browser's storage, so we don't have to ask at every visit. It is not used to profile you and requires no consent. You can delete it from your browser settings."
+      ] },
+      { h: "External links", p: [
+        "The Map and WhatsApp buttons and the phone number open external services (Google Maps, WhatsApp, your phone app), which process your data under their own privacy notices. If you write or call us, we use your data only to reply."
+      ] },
+      { h: "Your rights", p: [
+        "You can ask at any time to access, correct or delete your data, or to restrict or object to its processing, by writing to {email}.",
+        "You also have the right to lodge a complaint with the Italian Data Protection Authority (garanteprivacy.it)."
+      ] }
+    ]
   },
 
   // Ordine = ordine di rendering. `type` decide il renderer.

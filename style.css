@@ -867,12 +867,13 @@ button.chip {
   line-height: inherit;
 }
 
-/* ---------- Pop-up allergeni ---------- */
-.allergen-modal {
+/* ---------- Pop-up allergeni e privacy ---------- */
+.allergen-modal,
+.privacy-modal {
   width: min(92vw, 560px);
   max-width: 92vw;
   max-height: 85vh;
-  padding: 0; /* il padding sta su .allergen-modal__panel: così e.target === dialog solo sul backdrop */
+  padding: 0; /* il padding sta sul pannello (__panel): così e.target === dialog solo sul backdrop */
   border: 0;
   border-radius: 6px;
   background: #FDEBCB; /* crema attenuato: a metà tra il crema del logo e il fondo della pagina */
@@ -881,21 +882,27 @@ button.chip {
   box-shadow: 0 18px 50px rgba(42, 18, 22, .18), 0 2px 8px rgba(42, 18, 22, .08);
   overflow: hidden;
 }
-.allergen-modal::backdrop {
+.allergen-modal::backdrop,
+.privacy-modal::backdrop {
   background: rgba(42, 18, 22, .42);
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
-.allergen-modal[open] { animation: lang-modal-in .3s var(--ease) both; }
-.allergen-modal[open]::backdrop { animation: lang-modal-fade-in .3s var(--ease) both; }
-.allergen-modal__panel {
+.allergen-modal[open],
+.privacy-modal[open] { animation: lang-modal-in .3s var(--ease) both; }
+.allergen-modal[open]::backdrop,
+.privacy-modal[open]::backdrop { animation: lang-modal-fade-in .3s var(--ease) both; }
+.allergen-modal__panel,
+.privacy-modal__panel {
   position: relative;
   max-height: 85vh;
   overflow-y: auto;
   padding: clamp(24px, 5vw, 36px);
 }
-.allergen-modal__panel:focus { outline: none; } /* riceve il focus iniziale: nessun anello visibile */
-.allergen-modal__close {
+.allergen-modal__panel:focus,
+.privacy-modal__panel:focus { outline: none; } /* riceve il focus iniziale: nessun anello visibile */
+.allergen-modal__close,
+.privacy-modal__close {
   position: absolute;
   top: 6px;
   right: 6px;
@@ -911,8 +918,10 @@ button.chip {
   color: var(--ink);
   transition: background-color .2s var(--ease);
 }
-.allergen-modal__close:hover { background: var(--accent-soft); }
-.allergen-modal__title {
+.allergen-modal__close:hover,
+.privacy-modal__close:hover { background: var(--accent-soft); }
+.allergen-modal__title,
+.privacy-modal__title {
   margin: 0 2.5rem 1.1rem 0; /* spazio per il pulsante chiudi */
   font-family: var(--sans);
   font-size: .8rem;
@@ -920,6 +929,23 @@ button.chip {
   letter-spacing: .12em;
   text-transform: uppercase;
   line-height: 1.4;
+}
+.privacy-modal__h {
+  margin: 1.1rem 0 .3rem;
+  font-family: var(--sans);
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--ink);
+}
+.privacy-modal__panel p {
+  margin: 0 0 .5rem;
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--muted);
+}
+.privacy-modal__panel .privacy-modal__data {
+  margin-top: 1.2rem;
+  font-size: .75rem;
 }
 .allergen-modal__piatto {
   margin-bottom: 1rem;
@@ -1161,6 +1187,24 @@ button.chip {
   transition: border-color .2s var(--ease);
 }
 .site-footer__contacts a:hover { border-bottom-color: var(--accent); }
+.site-footer__legal {
+  margin-top: .6rem;
+  font-size: .75rem;
+  letter-spacing: .02em;
+}
+.site-footer__legal[hidden] { display: none; }
+.site-footer__privacy {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  letter-spacing: inherit;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.site-footer__privacy:hover { color: var(--ink); }
 .site-footer__copy {
   margin-top: .35rem;
   font-size: .75rem;
@@ -1443,7 +1487,7 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox, .allergen-modal, .menu-notes__hint { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .lang-switch, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
   body, .site-header { background: #fff; }
   .onda { display: none; }
   .site-header__logo { width: 200px; }
