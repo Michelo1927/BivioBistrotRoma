@@ -682,6 +682,31 @@
     ]);
   }
 
+  /**
+   * Aggiorna lo stato del pager agganciato al fondo dello schermo.
+   * - is-fluttuante: il posto naturale del pager (sotto il contenuto) è oltre il punto di aggancio (fondo della finestra
+   *   meno il `bottom` del CSS), quindi i pulsanti galleggiano lì; quando il posto naturale entra nella finestra
+   *   (fine lista, pagine corte) tornano lì.
+   * - is-nascosta: fluttuante e pagina ferma in cima (scrollY < 24): compare solo appena si scorre.
+   * Il posto naturale si calcola dall'elemento che precede il pager + margine + padding + altezza dei pulsanti, senza
+   * leggere la posizione del pager stesso (che da agganciato è quella dello schermo).
+   */
+  function syncPager() {
+    var pager = mainEl.querySelector(".pager");
+    if (!pager) return;
+    var prev = pager.previousElementSibling;
+    var btn = pager.firstElementChild;
+    var fluttuante = false;
+    if (prev && btn) {
+      var stile = window.getComputedStyle(pager);
+      var spazio = (parseFloat(stile.marginTop) || 0) + 2 * (parseFloat(stile.paddingTop) || 0);
+      var fondoNaturale = prev.getBoundingClientRect().bottom + spazio + btn.offsetHeight;
+      fluttuante = fondoNaturale > window.innerHeight - (parseFloat(stile.bottom) || 0);
+    }
+    pager.classList.toggle("is-fluttuante", fluttuante);
+    pager.classList.toggle("is-nascosta", fluttuante && window.scrollY < 24);
+  }
+
   function renderSection(section) {
     var frag = document.createDocumentFragment();
     // Nota di sezione (riquadro sobrio prima della prima categoria)
@@ -878,6 +903,8 @@
     mainEl.classList.add("is-entering");
     if (!keepSubnav) renderSubnav(section);
     setupScrollSpy();
+    syncPager();
+    syncToTop();
   }
 
   /**
@@ -950,19 +977,22 @@
     toTopEl.setAttribute("aria-hidden", show ? "false" : "true");
     toTopEl.tabIndex = show ? 0 : -1;
   }
+  /** Mostra "torna su" oltre 600px di scroll, ma non nelle sezioni a pagine (stesso angolo del pulsante "avanti"). */
+  function syncToTop() {
+    if (!toTopEl) return;
+    var section = findSection(activeSectionId);
+    var show = window.scrollY > 600 && !(section && isPaged(section));
+    if (show !== toTopVisible) setToTop(show);
+  }
+  // Lo scroll scatta al più una volta per frame e le due funzioni fanno poche letture: nessun throttle
+  window.addEventListener("scroll", function () {
+    syncToTop();
+    syncPager();
+  }, { passive: true });
+  window.addEventListener("resize", syncPager);
   if (toTopEl) {
     toTopEl.hidden = false;
     setToTop(false);
-    var ticking = false;
-    window.addEventListener("scroll", function () {
-      if (ticking) return;
-      ticking = true;
-      window.requestAnimationFrame(function () {
-        ticking = false;
-        var show = window.scrollY > 600;
-        if (show !== toTopVisible) setToTop(show);
-      });
-    }, { passive: true });
     toTopEl.addEventListener("click", function () {
       window.scrollTo({ top: 0, behavior: scrollBehavior() });
       if (topEl) topEl.focus({ preventScroll: true });

@@ -542,7 +542,13 @@ button.chip {
   display: flex;
   justify-content: space-between;
   gap: clamp(12px, 3vw, 24px);
-  margin-top: clamp(32px, 6vw, 56px);
+  margin-top: clamp(22px, 5vw, 46px);
+  padding: 10px 0;
+  position: sticky;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px)); /* da agganciati i pulsanti stanno un po' sopra il bordo dello schermo */
+  z-index: 40;
+  pointer-events: none; /* solo i pulsanti ricevono il tocco: lo spazio tra i due lascia passare i clic ai piatti */
+  transition: opacity .25s var(--ease), transform .25s var(--ease);
   /* Sagome del pulsante (maschere SVG, si adattano all'altezza): estremità con la punta (tondo da cui esce
      una punta raccordata, larga 32px) ed estremità tonda (24px), ciascuna come riempimento e come contorno */
   --punta-piena: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 48' preserveAspectRatio='none'%3E%3Cpath d='M32 .5A23.5 23.5 0 0 0 12.75 10.52C9.3 15.4 6.8 19.2 2 22.8Q.6 24 2 25.2C6.8 28.8 9.3 32.6 12.75 37.48A23.5 23.5 0 0 0 32 47.5Z'/%3E%3C/svg%3E");
@@ -552,6 +558,19 @@ button.chip {
   /* Tratti dritti sopra e sotto: SVG come le curve, così il contorno ha lo stesso spessore ovunque */
   --dritto-filo: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 48' preserveAspectRatio='none'%3E%3Cpath d='M0 .5H10M0 47.5H10' fill='none' stroke='%23000' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
 }
+/* Agganciati al fondo dello schermo: solo i due pulsanti, senza fascia, con un'ombra leggera che li stacca dai
+   piatti che scorrono sotto (drop-shadow segue la sagoma con la punta). Nel posto naturale la classe manca */
+.pager.is-fluttuante .pager__btn { filter: drop-shadow(0 2px 6px rgba(42, 18, 22, .22)); }
+.pager.is-nascosta {
+  opacity: 0;
+  transform: translateY(8px);
+}
+.pager.is-nascosta .pager__btn { pointer-events: none; }
+.pager.is-nascosta:focus-within {
+  opacity: 1;
+  transform: none;
+}
+.pager.is-nascosta:focus-within .pager__btn { pointer-events: auto; }
 /* Il pulsante non ha bordo né sfondo propri: fondo (::before) e contorno (::after) sono due livelli ritagliati
    con le sagome qui sopra, così il profilo è un tracciato unico. Disegnato con la punta a sinistra (precedente),
    specchiato per la successiva. */
@@ -570,6 +589,7 @@ button.chip {
   color: var(--brand);
   text-align: center;
   cursor: pointer;
+  pointer-events: auto;
   transition: color .2s var(--ease);
 }
 /* Successiva = azione principale (piena, come la tab attiva); precedente = secondaria (solo contorno) */
