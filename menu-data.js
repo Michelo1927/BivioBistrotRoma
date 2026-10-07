@@ -39,7 +39,7 @@
  *    - []                                   = nessun allergene dichiarato (non si mostra nulla);
  *    - "chef"                               = allergeni comunicati separatamente in base alla ricetta della Chef;
  *    - "ask"                                = (caffetteria) nota "chiedi al personale" sotto la voce.
- *  `frozen: true` = prodotto gelo: un asterisco dopo il nome rimanda alla nota in fondo alla legenda.
+ *  `frozen: true` = prodotto gelo: un asterisco dopo il nome rimanda alla nota sotto i piatti.
  *
  * COLLEGAMENTO INTERNO DI UNA VOCE (`link`, opzionale, righe a due prezzi)
  *  link: { section, category, label } -> sotto il nome compare un collegamento "label" (corsivo, sottolineato) che porta
@@ -123,6 +123,8 @@ window.BIVIO_MENU = Object.freeze({
       frozenNote: "Prodotto gelo: i prodotti alimentari freschi e/o preparati nel nostro laboratorio possono subire una corretta procedura di abbattimento e rinvenimento per garantire un prodotto sempre di alta qualità.",
       allergyAsk: "Per favore comunica qualsiasi allergia al personale.",
       allergensAsk: "Allergeni: chiedi al personale",
+      allergensHint: "Tocca i numeri di un piatto per vedere gli allergeni.",
+      allergensContains: "{d} contiene:", allergensPresent: "presente in questo piatto",
       frozenMark: "Prodotto gelo",
       seeSelection: "vedi la selezione in Distillati",
       hoursTitle: "Orari", openNow: "Aperto", closedNow: "Chiuso",
@@ -146,6 +148,8 @@ window.BIVIO_MENU = Object.freeze({
       frozenNote: "Frozen product: fresh food and/or products made in our kitchen may undergo a proper blast-chilling and thawing process to guarantee consistently high quality.",
       allergyAsk: "Please let our staff know about any allergies.",
       allergensAsk: "Allergens: please ask our staff",
+      allergensHint: "Tap the numbers on a dish to see its allergens.",
+      allergensContains: "{d} contains:", allergensPresent: "present in this dish",
       frozenMark: "Frozen product",
       seeSelection: "see the selection in Spirits",
       hoursTitle: "Opening hours", openNow: "Open", closedNow: "Closed",

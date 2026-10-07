@@ -261,7 +261,7 @@
 
   // ---------------------------------------------------------------- Stato
   var activeSectionId = null;
-  var NAV_TARGETS = ".category, .menu-info"; // blocchi che hanno una chip nella subnav e vengono osservati dallo scrollspy
+  var NAV_TARGETS = ".category"; // blocchi che hanno una chip nella subnav e vengono osservati dallo scrollspy
   var spyObserver = null;
   var activeCategory = {}; // id sezione -> id categoria aperta (solo sezioni "paged"): tornando nella scheda si riapre l'ultima vista
   var printAll = false;    // true durante la stampa: le sezioni "paged" mostrano tutte le categorie
@@ -382,7 +382,7 @@
   /**
    * Allergeni del piatto. `allergens`: array di id = presenti; [] o assente = nulla;
    * "chef" = comunicati separatamente. Restituisce null se non c'è nulla da mostrare.
-   * Sotto il piatto: solo cerchietti numerati (aria-hidden) dentro un link discreto alla legenda;
+   * Sotto il piatto: solo cerchietti numerati (aria-hidden) dentro un pulsante discreto che apre il pop-up allergeni;
    * il testo per screen reader ("Allergeni: Glutine, Uova") è in uno span visually-hidden.
    */
   function renderDishAllergens(d) {
@@ -401,42 +401,139 @@
       circles.push(el("span", { class: "dish__allergen", "aria-hidden": "true", "data-allergen": String(id), title: id + " · " + label, text: String(id) }));
     });
     if (!circles.length) return null;
-    var link = el("a", { class: "dish__allergens-link", href: "#cat-allergeni" },
+    var link = el("button", { type: "button", class: "dish__allergens-link", "aria-haspopup": "dialog" },
       [el("span", { class: "visually-hidden", text: t("allergensLabel") + ": " + names.join(", ") })].concat(circles));
-    link.addEventListener("click", function (e) {
-      e.preventDefault();
-      // Stesso percorso delle chip della subnav: scroll alla legenda + hash sezione/categoria
-      scrollToCategory("allergeni");
-      updateHash(activeSectionId + "/allergeni");
-    });
+    link.addEventListener("click", function () { openAllergens(d, link); });
     return el("p", { class: "dish__allergens" }, [link]);
   }
 
   /**
-   * Pannello informativo sugli allergeni (solo sezione Cucina, dopo l'ultima categoria):
-   * non è una categoria del menu, ma mantiene id "cat-allergeni" per subnav e scrollspy.
-   * Restituisce un frammento: divisore + pannello.
+   * Elenco numerato dei 14 allergeni (ol.allergen-list), usato dal pop-up e dalla legenda di stampa.
+   * `presenti`: array di id degli allergeni del piatto (evidenziati) oppure null (elenco neutro).
+   */
+  function renderAllergenList(presenti) {
+    var evidenzia = Array.isArray(presenti) && presenti.length > 0;
+    return el("ol", { class: evidenzia ? "allergen-list allergen-list--piatto" : "allergen-list" }, (MENU.allergens || []).map(function (al) {
+      var presente = evidenzia && presenti.indexOf(al.id) !== -1;
+      return el("li", { class: presente ? "allergen is-presente" : "allergen", "data-allergen": String(al.id) }, [
+        el("span", { class: "allergen__num", "aria-hidden": "true", text: String(al.id) }),
+        el("span", { class: "allergen__name", text: tr(al, "name") }),
+        presente ? el("span", { class: "visually-hidden", text: t("allergensPresent") }) : null
+      ]);
+    }));
+  }
+
+  /**
+   * Legenda allergeni per la sola stampa (sezione Cucina, dopo il pager): a schermo è nascosta,
+   * il cliente usa il pop-up (openAllergens). Intestazione + elenco + invito a comunicare le allergie.
    */
   function renderAllergenLegend() {
-    var list = MENU.allergens || [];
-    if (!list.length) return null;
-    var frag = document.createDocumentFragment();
-    frag.appendChild(el("div", { class: "menu-divider", "aria-hidden": "true" }, [el("span", { class: "menu-divider__gem" })]));
-    frag.appendChild(el("aside", { class: "menu-info", id: "cat-allergeni", "aria-labelledby": "title-allergeni", "data-nav-label": t("allergensTitle") }, [
+    if (!(MENU.allergens || []).length) return null;
+    return el("aside", { class: "menu-info menu-info--stampa", "aria-labelledby": "title-allergeni" }, [
       el("div", { class: "menu-info__head" }, [
         buildInfoIcon(20),
         el("h2", { class: "menu-info__title", id: "title-allergeni", text: t("allergensInfoTitle") })
       ]),
-      el("ol", { class: "allergen-list" }, list.map(function (al) {
-        return el("li", { class: "allergen", "data-allergen": String(al.id) }, [
-          el("span", { class: "allergen__num", "aria-hidden": "true", text: String(al.id) }),
-          el("span", { class: "allergen__name", text: tr(al, "name") })
-        ]);
-      })),
-      el("p", { class: "allergen-note" }, [el("span", { class: "allergen-note__mark", "aria-hidden": "true", text: "*" }), " " + t("frozenNote")]),
+      renderAllergenList(null),
       el("p", { class: "allergen-ask", text: t("allergyAsk") })
-    ]));
-    return frag;
+    ]);
+  }
+
+  /** Note sotto i piatti della Cucina: invito a toccare i numeri (solo a schermo) + nota "prodotto gelo". */
+  function renderMenuNotes() {
+    return el("div", { class: "menu-notes" }, [
+      el("p", { class: "menu-notes__hint" }, [buildInfoIcon(14), el("span", { text: t("allergensHint") })]),
+      el("p", { class: "allergen-note" }, [el("span", { class: "allergen-note__mark", "aria-hidden": "true", text: "*" }), " " + t("frozenNote")])
+    ]);
+  }
+
+  // ---------------------------------------------------------------- Pop-up allergeni
+  var allergenModalEl = document.querySelector(".allergen-modal");
+  var allergenState = { open: false, dish: null };
+  var allergenReady = false;
+  var allergenOpener = null; // elemento che ha aperto il pop-up: riceve il focus alla chiusura
+
+  /** Icona X (chiudi), line-art, decorativa. size in px. */
+  function buildCloseIcon(size) {
+    var s = svg("svg", { viewBox: "0 0 24 24", width: String(size), height: String(size), fill: "none", stroke: "currentColor", "stroke-width": "1.6", "stroke-linecap": "round", "stroke-linejoin": "round", "aria-hidden": "true", focusable: "false" });
+    s.appendChild(svg("path", { d: "M6 6l12 12M18 6 6 18" }));
+    return s;
+  }
+
+  /** Ricostruisce il contenuto del pop-up nella lingua corrente per `dish` (o per l'elenco completo se null). */
+  function renderAllergenModal(dish) {
+    var panel = allergenModalEl.querySelector(".allergen-modal__panel");
+    if (!panel) return;
+    var presenti = [];
+    if (dish && Array.isArray(dish.allergens)) {
+      dish.allergens.forEach(function (id) { if (findAllergen(id)) presenti.push(id); });
+    }
+    panel.textContent = "";
+
+    var closeBtn = el("button", { type: "button", class: "allergen-modal__close", "aria-label": t("close") }, [buildCloseIcon(24)]);
+    closeBtn.addEventListener("click", function () { allergenModalEl.close(); });
+    panel.appendChild(closeBtn);
+    panel.appendChild(el("h2", { class: "allergen-modal__title", id: "allergen-modal-title", text: t("allergensInfoTitle") }));
+
+    if (presenti.length) {
+      // Il nome del piatto va in evidenza: si spezza il testo sul segnaposto {d}
+      var parts = fmt("allergensContains", "", "\u0001").split("\u0001");
+      var nomi = presenti.slice().sort(function (x, y) { return x - y; }).map(function (id) { return tr(findAllergen(id), "name"); });
+      panel.appendChild(el("p", { class: "allergen-modal__piatto" }, [
+        parts[0], el("strong", { text: tr(dish, "name") }), (parts[1] || "") + " " + nomi.join(", ")
+      ]));
+    }
+
+    panel.appendChild(renderAllergenList(presenti));
+    panel.appendChild(el("p", { class: "allergen-ask", text: t("allergyAsk") }));
+  }
+
+  /**
+   * Apre il pop-up allergeni. `dish` (può essere null): evidenzia i suoi allergeni nell'elenco;
+   * `opener`: elemento che riceve il focus alla chiusura.
+   */
+  function openAllergens(dish, opener) {
+    if (!allergenModalEl) return;
+    setupAllergenModal();
+    if (allergenState.open) return;
+    allergenOpener = opener || document.activeElement;
+    allergenState.dish = dish || null;
+    renderAllergenModal(allergenState.dish);
+    allergenState.open = true;
+    if (typeof allergenModalEl.showModal === "function") {
+      document.documentElement.classList.add("is-modal-open");
+      try { allergenModalEl.showModal(); } catch (e) {
+        document.documentElement.classList.remove("is-modal-open");
+        allergenModalEl.setAttribute("open", "");
+      }
+    } else {
+      // Nessun <dialog> modale: l'informazione deve comunque essere leggibile
+      allergenModalEl.setAttribute("open", "");
+    }
+    var panel = allergenModalEl.querySelector(".allergen-modal__panel");
+    if (panel) panel.focus({ preventScroll: true });
+  }
+
+  /** Listener del pop-up: registrati una sola volta, alla prima apertura. */
+  function setupAllergenModal() {
+    if (allergenReady) return;
+    allergenReady = true;
+    // Alla chiusura (Esc, X o sfondo): sblocca lo scroll e riporta il focus all'elemento che ha aperto
+    allergenModalEl.addEventListener("close", function () {
+      allergenState.open = false;
+      allergenState.dish = null;
+      document.documentElement.classList.remove("is-modal-open");
+      // Aperto da #sezione/allergeni: toglie "allergeni" dall'hash, altrimenti un ricaricamento riaprirebbe il pop-up
+      if (/\/allergeni$/.test(location.hash)) updateHash(activeSectionId);
+      if (allergenOpener && document.contains(allergenOpener) && typeof allergenOpener.focus === "function") {
+        allergenOpener.focus({ preventScroll: true });
+      }
+      allergenOpener = null;
+    });
+    // Click sullo sfondo: il padding sta sul pannello, quindi e.target === dialog solo fuori dal pannello
+    allergenModalEl.addEventListener("click", function (e) {
+      if (e.target === allergenModalEl) allergenModalEl.close();
+    });
   }
 
   // ---------------------------------------------------------------- Renderer
@@ -595,6 +692,8 @@
       var current = currentCategory(section);
       var page = current ? renderCategory(section, current, 0) : null;
       if (page) frag.appendChild(page);
+      // Note della Cucina: subito dopo la categoria, prima del pager
+      if (section.type === "food") frag.appendChild(renderMenuNotes());
       var pager = renderPager(section);
       if (pager) frag.appendChild(pager);
     } else {
@@ -602,8 +701,9 @@
         var node = renderCategory(section, cat, index);
         if (node) frag.appendChild(node);
       });
+      if (section.type === "food") frag.appendChild(renderMenuNotes());
     }
-    // Blocco extra della Cucina: legenda allergeni dopo l'ultima categoria
+    // Cucina: legenda allergeni completa, visibile solo in stampa
     if (section.type === "food") {
       var legend = renderAllergenLegend();
       if (legend) frag.appendChild(legend);
@@ -660,15 +760,13 @@
   function renderSubnav(section) {
     subnavEl.textContent = "";
 
-    /** Crea e aggiunge una chip; `onClick` gestisce il clic (preventDefault già fatto). */
-    function addChip(catId, label, href, isInfo, onClick) {
-      var chip = el("a", { class: isInfo ? "chip chip--info" : "chip", href: href, "data-cat": catId }, isInfo ? [buildInfoIcon(12), label] : [label]);
+    /** Chip di una categoria: link all'ancora; `onClick` gestisce il clic (preventDefault già fatto). */
+    function addChip(catId, label, href, onClick) {
+      var chip = el("a", { class: "chip", href: href, "data-cat": catId }, [label]);
       chip.addEventListener("click", function (e) {
         e.preventDefault();
         onClick();
       });
-      // Filetto verticale che stacca le chip informative da quelle delle categorie
-      if (isInfo && subnavEl.children.length) subnavEl.appendChild(el("span", { class: "subnav__sep", "aria-hidden": "true" }));
       subnavEl.appendChild(chip);
     }
 
@@ -677,24 +775,28 @@
       updateHash(section.id + "/" + catId);
     }
 
-    if (isPaged(section)) {
-      // Sezione a pagine: nel DOM c'è una sola categoria, quindi le chip si costruiscono dai dati; le informative vengono dal DOM
-      visibleCategories(section).forEach(function (cat) {
-        addChip(cat.id, tr(cat, "label"), "#" + section.id + "/" + cat.id, false, function () { setCategory(section, cat.id); });
-      });
-      Array.prototype.forEach.call(mainEl.querySelectorAll(".menu-info"), function (node) {
-        var catId = node.id.replace(/^cat-/, "");
-        addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, true, function () { scrollChip(catId); });
-      });
-      return;
+    /** Chip informativa "Allergeni" (solo Cucina): pulsante che apre il pop-up, staccato dalle categorie da un filetto. */
+    function addAllergenChip() {
+      if (section.type !== "food" || !(MENU.allergens || []).length) return;
+      var chip = el("button", { type: "button", class: "chip chip--info", "aria-haspopup": "dialog", "data-cat": "allergeni" }, [buildInfoIcon(12), t("allergensTitle")]);
+      chip.addEventListener("click", function () { openAllergens(null, chip); });
+      if (subnavEl.children.length) subnavEl.appendChild(el("span", { class: "subnav__sep", "aria-hidden": "true" }));
+      subnavEl.appendChild(chip);
     }
 
-    // Una chip per ogni blocco navigabile effettivamente renderizzato: categorie (.category) + pannelli informativi (.menu-info)
-    Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
-      var catId = node.id.replace(/^cat-/, "");
-      var isInfo = node.classList.contains("menu-info");
-      addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, isInfo, function () { scrollChip(catId); });
-    });
+    if (isPaged(section)) {
+      // Sezione a pagine: nel DOM c'è una sola categoria, quindi le chip si costruiscono dai dati
+      visibleCategories(section).forEach(function (cat) {
+        addChip(cat.id, tr(cat, "label"), "#" + section.id + "/" + cat.id, function () { setCategory(section, cat.id); });
+      });
+    } else {
+      // Una chip per ogni categoria effettivamente renderizzata
+      Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
+        var catId = node.id.replace(/^cat-/, "");
+        addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, function () { scrollChip(catId); });
+      });
+    }
+    addAllergenChip();
   }
 
   /** Porta la pagina all'inizio del menu; senza `always` non scende mai (se l'utente è ancora sull'header resta dov'è). */
@@ -739,7 +841,7 @@
     if (spyObserver) spyObserver.disconnect();
     var activeSection = findSection(activeSectionId);
     if (activeSection && isPaged(activeSection)) {
-      // Sezione a pagine: la chip attiva è la categoria aperta, niente scrollspy (evidenzierebbe "Allergeni" scorrendo)
+      // Sezione a pagine: la chip attiva è la categoria aperta, niente scrollspy
       var open = currentCategory(activeSection);
       if (open) markChip(open.id);
       return;
@@ -809,7 +911,10 @@
 
     if (!opts.keepHash) updateHash(opts.category ? id + "/" + opts.category : id);
 
-    if (pagedCat) {
+    if (opts.category === "allergeni" && section.type === "food" && (MENU.allergens || []).length) {
+      // #cucina/allergeni: apre il pop-up con l'elenco completo (opener = chip Allergeni)
+      openAllergens(null, subnavEl.querySelector('[data-cat="allergeni"]'));
+    } else if (pagedCat) {
       scrollToMenuTop();
     } else if (opts.category && document.getElementById("cat-" + opts.category)) {
       scrollToCategory(opts.category, true);
@@ -1187,6 +1292,7 @@
     }
     applyStaticText();
     syncGallery();
+    if (allergenState.open) renderAllergenModal(allergenState.dish); // cambio lingua con pop-up allergeni aperto
     if (opts.initial || !changed) return;
     var y = window.scrollY;
     renderTabs();
