@@ -64,6 +64,8 @@
 :root {
   --brand: #731223;       /* bordeaux del logo */
   --brand-cream: #FEE2B3; /* crema del logo (fondo header) */
+  --btn-bg: #883440;   /* bottoni pieni: bordeaux del logo schiarito (circa l'85% sul fondo crema) */
+  --btn-ink: #FFFBF3;  /* testo sui bottoni pieni: quasi bianco, più leggibile del crema */
   --bg: #FDF4E3;
   --surface: #FFFBF3;
   --ink: #2A1216;
@@ -361,9 +363,9 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 }
 .tab:hover { border-color: var(--accent); }
 .tab[aria-selected="true"] {
-  background: var(--brand);
-  border-color: var(--brand);
-  color: var(--brand-cream);
+  background: var(--btn-bg);
+  border-color: var(--btn-bg);
+  color: var(--btn-ink);
 }
 
 /* Subnav: chip testuali; .subnav è il contenitore di riferimento per offsetLeft (script.js) */
@@ -530,10 +532,11 @@ button.chip {
 }
 /* Successiva = azione principale (piena, come la tab attiva); precedente = secondaria (solo contorno) */
 .pager__btn--next {
-  --pager-bg: var(--brand);
+  --pager-bg: var(--btn-bg);
+  --pager-filo: var(--btn-bg);
   margin-left: auto;
   padding: 12px 2rem 12px 1.5rem;
-  color: var(--brand-cream);
+  color: var(--btn-ink);
 }
 .pager__btn::before,
 .pager__btn::after {
@@ -549,7 +552,7 @@ button.chip {
   mask: var(--punta-piena) left top / 32px 100% no-repeat, var(--tondo-pieno) right top / 24px 100% no-repeat, linear-gradient(#000, #000) 29px top / calc(100% - 50px) 100% no-repeat;
 }
 .pager__btn::after {
-  background: var(--brand);
+  background: var(--pager-filo, var(--brand));
   -webkit-mask: var(--punta-filo) left top / 32px 100% no-repeat, var(--tondo-filo) right top / 24px 100% no-repeat, var(--dritto-filo) 29px top / calc(100% - 50px) 100% no-repeat;
   mask: var(--punta-filo) left top / 32px 100% no-repeat, var(--tondo-filo) right top / 24px 100% no-repeat, var(--dritto-filo) 29px top / calc(100% - 50px) 100% no-repeat;
 }
@@ -1128,8 +1131,8 @@ button.chip {
   padding: 0;
   border: 0;
   border-radius: 50%;
-  background: var(--brand);
-  color: var(--brand-cream);
+  background: var(--btn-bg);
+  color: var(--btn-ink);
   opacity: 0;
   transform: translateY(8px);
   visibility: hidden;
