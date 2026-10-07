@@ -1278,19 +1278,20 @@ button.chip {
 /* ---------- Modale scelta lingua ---------- */
 html.is-modal-open { overflow: hidden; }
 
+/* Cartoncino compatto con gli angoli molto arrotondati (come la cornice del logo) e due pulsanti a pillola, come le tab */
 .lang-modal {
-  width: min(92vw, 440px);
-  max-width: 92vw;
+  width: min(86vw, 320px);
+  max-width: 86vw;
   padding: 0; /* il padding sta su .lang-modal__panel: così e.target === dialog solo sul backdrop */
   border: 0;
-  border-radius: 6px;
+  border-radius: 28px;
   background: var(--brand-cream);
   color: var(--ink);
   text-align: center;
   box-shadow: 0 18px 50px rgba(42, 18, 22, .18), 0 2px 8px rgba(42, 18, 22, .08);
   overflow: visible;
 }
-.lang-modal__panel { padding: clamp(28px, 6vw, 48px); }
+.lang-modal__panel { padding: 1.75rem 1.25rem 1.4rem; }
 .lang-modal__panel:focus { outline: none; } /* riceve il focus iniziale: nessun anello visibile */
 .lang-modal::backdrop {
   background: rgba(42, 18, 22, .42);
@@ -1309,64 +1310,44 @@ html.is-modal-open { overflow: hidden; }
 
 .lang-modal__title { line-height: 0; }
 .lang-modal__logo {
-  width: min(100%, 260px);
+  width: 132px;
   height: auto;
   margin: 0 auto;
 }
-.lang-modal__ornament {
-  display: block;
-  width: 32px;
-  height: 1px;
-  margin: 1.1rem auto .95rem;
-  background: var(--accent);
-}
 .lang-modal__subtitle {
+  margin-top: .9rem;
   font-family: var(--serif);
   font-style: italic;
   font-weight: 500;
-  font-size: 1.15rem;
+  font-size: 1.05rem;
+  line-height: 1.3;
   color: var(--muted);
 }
 .lang-modal__choices {
   display: flex;
-  gap: .75rem;
-  margin-top: 1.75rem;
+  gap: .5rem;
+  margin-top: 1.1rem;
 }
 .lang-modal__btn {
   flex: 1 1 0;
   min-width: 0;
-  min-height: 56px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: .3rem;
-  padding: 1.1rem .75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  min-height: 44px;
+  padding: .5rem .75rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: 999px;
   background: var(--surface);
   color: var(--ink);
-  transition: border-color .2s var(--ease), transform .2s var(--ease);
+  transition: border-color .2s var(--ease), background-color .2s var(--ease), color .2s var(--ease);
 }
 .lang-modal__btn:hover,
 .lang-modal__btn:focus-visible { border-color: var(--accent); }
-.lang-modal__btn:hover { transform: translateY(-1px); }
+/* Lingua attiva (solo quando il modale è aperto dal pulsante in alto): pillola piena, come la tab selezionata */
+.lang-modal__btn[aria-current="true"] { border-color: var(--btn-bg); background: var(--btn-bg); color: var(--btn-ink); }
 .lang-modal__name {
-  font-family: var(--serif);
+  font-size: .9375rem;
   font-weight: 500;
-  font-size: 1.4rem;
-  line-height: 1.1;
-}
-.lang-modal__hint {
-  font-size: .6875rem;
-  font-weight: 500;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--muted);
-  padding-left: .14em;
-}
-@media (max-width: 419.98px) {
-  .lang-modal__choices { flex-direction: column; }
+  letter-spacing: .02em;
+  line-height: 1.2;
 }
 
 /* ---------- Lightbox ---------- */
