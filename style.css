@@ -875,7 +875,7 @@ button.chip {
   padding: 0; /* il padding sta su .allergen-modal__panel: così e.target === dialog solo sul backdrop */
   border: 0;
   border-radius: 6px;
-  background: var(--brand-cream);
+  background: #FDEBCB; /* crema attenuato: a metà tra il crema del logo e il fondo della pagina */
   color: var(--ink);
   text-align: left;
   box-shadow: 0 18px 50px rgba(42, 18, 22, .18), 0 2px 8px rgba(42, 18, 22, .08);
