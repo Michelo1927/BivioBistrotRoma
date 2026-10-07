@@ -832,9 +832,12 @@
    * Il posto naturale si calcola dall'elemento che precede il pager + margine + padding + altezza dei pulsanti, senza
    * leggere la posizione del pager stesso (che da agganciato è quella dello schermo).
    */
-  function syncPager() {
+  function syncPager(immediato) {
     var pager = mainEl.querySelector(".pager");
     if (!pager) return;
+    // Pager appena creato (immediato): lo stato va applicato senza transizione, altrimenti i pulsanti
+    // nascono visibili e si vedono per un attimo mentre sfumano
+    if (immediato) pager.style.transition = "none";
     var prev = pager.previousElementSibling;
     var btn = pager.firstElementChild;
     var fluttuante = false;
@@ -846,6 +849,10 @@
     }
     pager.classList.toggle("is-fluttuante", fluttuante);
     pager.classList.toggle("is-nascosta", fluttuante && window.scrollY < 24);
+    if (immediato) {
+      void pager.offsetWidth; // applica lo stato prima di riattivare la transizione
+      pager.style.transition = "";
+    }
   }
 
   function renderSection(section) {
@@ -1080,7 +1087,7 @@
     mainEl.classList.add("is-entering");
     if (!keepSubnav) renderSubnav(section);
     setupScrollSpy();
-    syncPager();
+    syncPager(true);
     syncToTop();
   }
 
@@ -1167,7 +1174,7 @@
     syncPager();
     spyUpdate();
   }, { passive: true });
-  window.addEventListener("resize", syncPager);
+  window.addEventListener("resize", function () { syncPager(); });
   if (toTopEl) {
     toTopEl.hidden = false;
     setToTop(false);
