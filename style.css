@@ -1081,8 +1081,9 @@ button.chip {
   letter-spacing: .04em;
 }
 
-/* Orari nel footer: griglia compatta centrata (giorni a destra, orari a sinistra) */
+/* Orari nel footer: solo in stampa (a schermo bastano la pillola e il suo pannello, in alto). Griglia compatta centrata (giorni a destra, orari a sinistra) */
 .hours[hidden] { display: none; }
+@media screen { .site-footer .hours { display: none; } }
 .hours__list {
   display: grid;
   grid-template-columns: auto auto;
