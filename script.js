@@ -451,6 +451,37 @@
     ]);
   }
 
+  /**
+   * Frase sugli allergeni nel footer: "Per allergie e intolleranze [leggi qui l'elenco degli allergeni] o chiedi al
+   * nostro personale." Il tratto tra parentesi è un pulsante che apre il pop-up con l'elenco completo.
+   * Senza allergeni nei dati resta la frase semplice (la stessa dell'HTML statico).
+   */
+  function renderFooterAllergens() {
+    var box = document.querySelector(".site-footer__allergeni");
+    if (!box) return;
+    box.textContent = "";
+    if (!(MENU.allergens || []).length) {
+      box.textContent = t("allergens");
+      return;
+    }
+    // Il link sta in mezzo alla frase: si spezza il testo sul segnaposto {link}
+    var parts = t("allergensFooter").split("{link}");
+    // <a role="button"> e non <button>: un pulsante non va a capo a metà, e su telefono la frase si spezzerebbe male
+    var link = el("a", { href: "#", role: "button", class: "site-footer__link", "aria-haspopup": "dialog", text: t("allergensFooterLink") });
+    link.addEventListener("click", function (e) {
+      e.preventDefault();
+      openAllergens(null, link);
+    });
+    link.addEventListener("keydown", function (e) {
+      if (e.key !== " ") return; // come un pulsante: si attiva anche con la barra spaziatrice
+      e.preventDefault();
+      openAllergens(null, link);
+    });
+    box.appendChild(document.createTextNode(parts[0]));
+    box.appendChild(link);
+    box.appendChild(document.createTextNode(parts[1] || ""));
+  }
+
   // ---------------------------------------------------------------- Pop-up allergeni
   var allergenModalEl = document.querySelector(".allergen-modal");
   var allergenState = { open: false, dish: null };
@@ -953,15 +984,6 @@
       updateHash(section.id + "/" + catId);
     }
 
-    /** Chip informativa "Allergeni" (solo Cucina): pulsante che apre il pop-up, staccato dalle categorie da un filetto. */
-    function addAllergenChip() {
-      if (section.type !== "food" || !(MENU.allergens || []).length) return;
-      var chip = el("button", { type: "button", class: "chip chip--info", "aria-haspopup": "dialog", "data-cat": "allergeni" }, [buildInfoIcon(12), t("allergensTitle")]);
-      chip.addEventListener("click", function () { openAllergens(null, chip); });
-      if (subnavEl.children.length) subnavEl.appendChild(el("span", { class: "subnav__sep", "aria-hidden": "true" }));
-      subnavEl.appendChild(chip);
-    }
-
     if (isPaged(section)) {
       // Sezione a pagine: nel DOM c'è una sola categoria, quindi le chip si costruiscono dai dati
       visibleCategories(section).forEach(function (cat) {
@@ -974,7 +996,6 @@
         addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, function () { scrollChip(catId); });
       });
     }
-    addAllergenChip();
   }
 
   /** Porta la pagina all'inizio del menu; senza `always` non scende mai (se l'utente è ancora sull'header resta dov'è). */
@@ -1123,8 +1144,8 @@
     if (!opts.keepHash) updateHash(opts.category ? id + "/" + opts.category : id);
 
     if (opts.category === "allergeni" && section.type === "food" && (MENU.allergens || []).length) {
-      // #cucina/allergeni: apre il pop-up con l'elenco completo (opener = chip Allergeni)
-      openAllergens(null, subnavEl.querySelector('[data-cat="allergeni"]'));
+      // #cucina/allergeni: apre il pop-up con l'elenco completo (opener = link nel footer)
+      openAllergens(null, document.querySelector(".site-footer__link"));
     } else if (pagedCat) {
       scrollToMenuTop();
     } else if (opts.category && document.getElementById("cat-" + opts.category)) {
@@ -1493,6 +1514,7 @@
     document.title = t("pageTitle");
     applyLinks();
     applyContacts();
+    renderFooterAllergens();
     renderLegal();
     renderStatus();
     renderStatusPanel();

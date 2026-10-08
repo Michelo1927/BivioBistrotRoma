@@ -455,22 +455,6 @@ button.chip {
   border-bottom-color: var(--accent);
 }
 
-/* Chip informativa (Allergeni): icona "i" + filetto verticale che la stacca dalle categorie */
-.chip--info {
-  display: inline-flex;
-  align-items: center;
-  gap: .35rem;
-}
-.chip--info .info-icon { flex: 0 0 auto; color: var(--accent); }
-.subnav__sep {
-  flex: 0 0 auto;
-  align-self: center;
-  width: 1px;
-  height: 1em;
-  margin: 0 .25rem;
-  background: var(--line);
-}
-
 /* ---------- Contenitore menu ---------- */
 .menu {
   max-width: var(--maxw);
@@ -1196,7 +1180,9 @@ button.chip {
   letter-spacing: .02em;
 }
 .site-footer__legal[hidden] { display: none; }
-.site-footer__privacy {
+/* Link testuali del footer che aprono un pop-up: Privacy e elenco degli allergeni */
+.site-footer__privacy,
+.site-footer__link {
   padding: 0;
   border: 0;
   background: none;
@@ -1207,7 +1193,8 @@ button.chip {
   text-underline-offset: 2px;
   cursor: pointer;
 }
-.site-footer__privacy:hover { color: var(--ink); }
+.site-footer__privacy:hover,
+.site-footer__link:hover { color: var(--ink); }
 .site-footer__copy {
   margin-top: .35rem;
   font-size: .75rem;
