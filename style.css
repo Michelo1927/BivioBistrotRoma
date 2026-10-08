@@ -795,6 +795,11 @@ a.titoli__voce:hover { color: var(--ink); }
   cursor: pointer;
   pointer-events: auto;
   transition: color .2s var(--ease);
+  /* Tenendo premuto su un telefono: niente riquadro di evidenziazione, niente selezione del testo né menu contestuale */
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 /* Successiva = azione principale (piena, come la tab attiva); precedente = secondaria (solo contorno) */
 .pager__btn--next {
@@ -824,10 +829,17 @@ a.titoli__voce:hover { color: var(--ink); }
 }
 .pager__btn--next::before,
 .pager__btn--next::after { transform: scaleX(-1); }
-.pager__btn:hover {
-  --pager-bg: var(--brand-cream);
-  color: var(--brand);
+/* Il cambio colore al passaggio vale solo dove esiste un puntatore: su un telefono, tenendo premuto, ":hover" restava
+   attivo e il pulsante cambiava colore (crema quello pieno) come se fosse un altro pulsante */
+@media (hover: hover) {
+  .pager__btn:hover {
+    --pager-bg: var(--brand-cream);
+    color: var(--brand);
+  }
 }
+/* Premuto: resta dello stesso colore, appena più scuro */
+.pager__btn:active { --pager-bg: var(--accent-soft); color: var(--brand); }
+.pager__btn--next:active { --pager-bg: var(--brand); color: var(--btn-ink); }
 .pager__name {
   display: block;
   font-family: var(--serif);
