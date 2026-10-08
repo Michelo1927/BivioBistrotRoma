@@ -1317,6 +1317,37 @@
     syncToTop();
   }
 
+  /**
+   * Sbuffo di bollicine nell'onda dell'intestazione, sopra la tab `tab`: una decina di bolle in più che salgono una
+   * volta sola e poi vengono tolte dal DOM (quelle fisse dell'HTML continuano per conto loro). Decorativo: niente con
+   * il movimento ridotto, e un tetto al numero di bolle se si cambia sezione a raffica.
+   */
+  function burstBubbles(tab) {
+    var onda = document.querySelector(".onda");
+    if (!onda || !tab || reducedMotion.matches) return;
+    if (onda.querySelectorAll(".onda__bolla--extra").length > 36) return;
+    var box = onda.getBoundingClientRect();
+    var t = tab.getBoundingClientRect();
+    if (!box.width) return;
+    var center = t.left + t.width / 2 - box.left;
+    var svgEl = onda.querySelector("svg");
+    for (var i = 0; i < 10; i++) {
+      var b = el("span", { class: "onda__bolla onda__bolla--extra" });
+      // Sparse attorno alla tab (poco più larghe di lei), a diverse altezze dentro l'onda
+      var x = center + (Math.random() - 0.5) * (t.width + 70);
+      b.style.left = Math.max(4, Math.min(box.width - 10, x)) + "px";
+      b.style.bottom = (15 + Math.random() * 60) + "%";
+      b.style.setProperty("--d", (3 + Math.round(Math.random() * 5)) + "px");
+      b.style.setProperty("--t", (1.1 + Math.random() * 1.1).toFixed(2) + "s");
+      b.style.setProperty("--r", (Math.random() * 0.35).toFixed(2) + "s");
+      b.style.setProperty("--dx", Math.round((Math.random() - 0.5) * 16) + "px");
+      b.addEventListener("animationend", function (e) {
+        if (e.target.parentNode) e.target.parentNode.removeChild(e.target);
+      });
+      onda.insertBefore(b, svgEl);
+    }
+  }
+
   var pendingSectionId = null;   // sezione scelta con una tab mentre il contenuto vecchio sta ancora uscendo
   var sectionSwitchTimer = null;
 
@@ -1338,6 +1369,7 @@
     pendingSectionId = id;
     syncTabs(id);
     flowTabs(ids.indexOf(shown), ids.indexOf(id));
+    burstBubbles(document.getElementById("tab-" + id));
     root.classList.remove("sezione-entra");
     root.classList.add("sezione-esce");
     sectionSwitchTimer = window.setTimeout(function () {

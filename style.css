@@ -460,6 +460,17 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   80%  { opacity: .3; }
   100% { opacity: 0;   transform: translate(-1px, calc(var(--sale) * -1)); }
 }
+/* Bollicine in più al cambio di sezione (create da script.js: burstBubbles, sopra la tab toccata): salgono una volta
+   sola, più in alto e più in fretta di quelle fisse, e poi spariscono. Posizione, misura e tempi arrivano dallo script. */
+.onda__bolla--extra {
+  animation: bolla-sbuffo var(--t, 1.6s) ease-out var(--r, 0s) 1 both;
+}
+@keyframes bolla-sbuffo {
+  0%   { opacity: 0;   transform: translate(0, 0) scale(.5); }
+  18%  { opacity: .65; transform: translate(0, calc(var(--sale) * -.25)) scale(1); }
+  70%  { opacity: .4; }
+  100% { opacity: 0;   transform: translate(var(--dx, 0px), calc(var(--sale) * -1.9)) scale(1.1); }
+}
 @media (prefers-reduced-motion: reduce) {
   .onda__bolla { display: none; }
 }
