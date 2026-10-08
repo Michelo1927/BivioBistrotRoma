@@ -1460,6 +1460,10 @@ html.is-modal-open { overflow: hidden; }
 /* ---------- Barra in alto: più compatta sui telefoni, per far stare il testo della pill di stato ---------- */
 /* Sotto i 380px sparisce anche la freccina della pill: il testo più lungo ("Chiuso · apre domani alle 07:30") entra a 360px */
 @media (max-width: 519.98px) {
+  /* Intestazione più bassa: logo più piccolo e meno aria, così i piatti cominciano più in alto */
+  .site-header { padding-top: 58px; padding-bottom: 30px; }
+  .site-header__logo { width: clamp(190px, 55vw, 250px); }
+  .site-header__overline { margin-top: .6rem; }
   .site-header__bar { gap: .3rem; }
   .site-header__actions { padding-left: .4rem; }
   .lang-open { width: 30px; margin-left: 0; } /* senza cerchio basta la larghezza della bandiera; l'area sensibile resta larga */
