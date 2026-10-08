@@ -243,7 +243,7 @@ window.BIVIO_MENU = Object.freeze({
   // Ordine = ordine di rendering. `type` decide il renderer.
   sections: [
     {
-      id: "cucina", label: "Cucina", en: { label: "Kitchen" }, type: "food", paged: true,
+      id: "cucina", label: "Cucina", en: { label: "Kitchen" }, type: "food",
       categories: [
         { id: "per-iniziare", label: "Per Iniziare", en: { label: "To Start" } },
         { id: "per-continuare", label: "Per Continuare", en: { label: "To Continue" } },
