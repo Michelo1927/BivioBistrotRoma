@@ -258,9 +258,9 @@ window.BIVIO_MENU = Object.freeze({
       categories: [
         { id: "prosecco", label: "Prosecco DOC", en: { label: "Prosecco DOC" } },
         { id: "bollicine", label: "Bollicine", en: { label: "Sparkling" } },
-        { id: "bianchi", label: "Bianchi", en: { label: "Whites" } },
         { id: "rose", label: "Rosé", en: { label: "Rosé" } },
-        { id: "rossi", label: "Rossi", en: { label: "Reds" } }
+        { id: "rossi", label: "Rossi", en: { label: "Reds" } },
+        { id: "bianchi", label: "Bianchi", en: { label: "Whites" } }
       ]
     },
     {
