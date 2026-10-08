@@ -17,6 +17,12 @@
   var navEl = document.querySelector(".menu-nav");
   var tabsEl = document.querySelector(".tabs");
   var subnavEl = document.querySelector(".subnav");
+  // Riga di titoli agganciata sotto le tab (sezioni a scorrimento): creata qui, riempita da renderSubnav
+  var navTitlesEl = subnavEl ? document.createElement("div") : null;
+  if (navTitlesEl) {
+    navTitlesEl.className = "titoli titoli--fissa";
+    subnavEl.parentNode.insertBefore(navTitlesEl, subnavEl);
+  }
   var toTopEl = document.querySelector(".to-top");
   var topEl = document.getElementById("top");
   var yearEl = document.getElementById("year");
@@ -801,16 +807,126 @@
     ]);
   }
 
+  /**
+   * Riga di titoli grandi di una sezione a pagine: la categoria aperta è il titolo (h2, a tutta grandezza, al centro),
+   * le altre sono link più piccoli e sbiaditi ai lati, nello stesso ordine delle chip: si vedono la precedente e la
+   * successiva, tagliate dai bordi. La riga non si trascina: si sposta solo toccando un titolo (alignTitles).
+   * Finché questa riga è a schermo le chip della subnav restano nascoste (syncTitles).
+   */
+  function renderTitles(section, cat, titleId) {
+    return el("nav", { class: "titoli", "aria-label": t("categoriesLabel") }, visibleCategories(section).map(function (c) {
+      if (c.id === cat.id) {
+        return el("h2", { class: "titoli__voce titoli__voce--attiva category__title", id: titleId, "data-cat": c.id, text: tr(c, "label") });
+      }
+      var link = el("a", { class: "titoli__voce", href: "#" + section.id + "/" + c.id, "data-cat": c.id, text: tr(c, "label") });
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        setCategory(section, c.id, { focus: true }); // il link cliccato viene distrutto dal re-render: focus su #menu
+      });
+      return link;
+    }));
+  }
+
+  /** Posizione di scorrimento della riga dei titoli che mette `node` al centro. */
+  function titleCenter(row, node) {
+    return node.offsetLeft + node.offsetWidth / 2 - row.clientWidth / 2;
+  }
+
+  var titleTween = 0; // contatore: uno scorrimento nuovo ferma quello ancora in corso
+
+  /**
+   * Centra `active` nella riga di titoli `row`. Con `from` (il titolo che era attivo) la riga parte centrata su quello
+   * e scorre fino al nuovo, mentre i due si scambiano grandezza e colore (classi --entra / --esce), come un carosello.
+   * Senza `from`, o con il movimento ridotto, si centra e basta.
+   */
+  function slideTitles(row, active, from) {
+    var token = ++titleTween;
+    Array.prototype.forEach.call(row.children, function (n) { n.classList.remove("titoli__voce--entra", "titoli__voce--esce"); });
+    var to = titleCenter(row, active);
+    if (!from || from === active || reducedMotion.matches) {
+      row.scrollLeft = to;
+      return;
+    }
+    var start = titleCenter(row, from);
+    row.scrollLeft = start;
+    void row.offsetWidth; // riavvia le animazioni se le classi c'erano già
+    active.classList.add("titoli__voce--entra");
+    from.classList.add("titoli__voce--esce");
+    var t0 = null;
+    function step(ts) {
+      if (token !== titleTween || !document.contains(row)) return; // superato da un altro scorrimento o riga ridisegnata
+      if (t0 === null) t0 = ts;
+      var p = Math.min(1, (ts - t0) / 380);
+      row.scrollLeft = start + (to - start) * (1 - Math.pow(1 - p, 3)); // ease-out
+      if (p < 1) window.requestAnimationFrame(step);
+    }
+    window.requestAnimationFrame(step);
+    // Rete di sicurezza: se i frame non arrivano (scheda in secondo piano), la riga finisce comunque centrata
+    window.setTimeout(function () {
+      if (token === titleTween && document.contains(row)) row.scrollLeft = to;
+    }, 450);
+  }
+
+  /**
+   * Centra il titolo attivo nella riga dei titoli presente: quella dentro la pagina (sezioni a pagine) o quella
+   * agganciata nella nav (sezioni a scorrimento). `fromCatId`: categoria da cui si arriva in una sezione a pagine,
+   * per animare lo scorrimento; senza, si centra e basta (primo disegno, resize, font caricati).
+   */
+  function alignTitles(fromCatId) {
+    [mainEl.querySelector(".titoli"), navTitlesEl].forEach(function (row) {
+      var active = row && row.querySelector(".titoli__voce--attiva");
+      if (!active) return;
+      slideTitles(row, active, fromCatId && row !== navTitlesEl ? row.querySelector('[data-cat="' + fromCatId + '"]') : null);
+    });
+  }
+
+  /**
+   * Sezioni a scorrimento: porta al centro della riga agganciata nella nav il titolo della categoria `catId`
+   * (chiamata dallo scrollspy mentre si scorre, e al clic su un titolo). Non fa nulla se la riga è vuota.
+   */
+  function markTitle(catId) {
+    if (!navTitlesEl || !navTitlesEl.firstChild) return;
+    var old = navTitlesEl.querySelector(".titoli__voce--attiva");
+    var next = navTitlesEl.querySelector('[data-cat="' + catId + '"]');
+    if (!next || next === old) return;
+    if (old) {
+      old.classList.remove("titoli__voce--attiva");
+      old.removeAttribute("aria-current");
+    }
+    next.classList.add("titoli__voce--attiva");
+    next.setAttribute("aria-current", "true");
+    slideTitles(navTitlesEl, next, old);
+  }
+
+  /**
+   * Sezioni a pagine: le chip della subnav stanno sovrapposte sotto le tab (classe menu-nav--titoli) e compaiono
+   * (is-visibile) solo quando la riga dei titoli grandi è uscita sotto la nav; così le due navigazioni non si
+   * vedono mai insieme. Nelle altre sezioni la subnav resta com'è.
+   */
+  function syncTitles() {
+    if (!navEl || !subnavEl) return;
+    var show = false;
+    if (navEl.classList.contains("menu-nav--titoli")) {
+      var row = mainEl.querySelector(".titoli");
+      show = !row || row.getBoundingClientRect().bottom < navHeight() + 4;
+    }
+    subnavEl.classList.toggle("is-visibile", show);
+  }
+
   /** Renderizza una categoria; restituisce null se non contiene voci. */
   function renderCategory(section, cat, index) {
     var items = categoryItems(section, cat);
     if (!items.length) return null;
 
     var titleId = "title-" + cat.id;
-    var heading = el("div", { class: "category__heading" }, [
-      el("h2", { class: "category__title", id: titleId, text: tr(cat, "label") }),
-      tr(cat, "subtitle") ? el("p", { class: "category__subtitle", text: tr(cat, "subtitle") }) : null
-    ]);
+    var subtitle = tr(cat, "subtitle") ? el("p", { class: "category__subtitle", text: tr(cat, "subtitle") }) : null;
+    var heading = isPaged(section)
+      // Sezione a pagine: il titolo è la riga di titoli grandi, che fa anche da navigazione tra le categorie
+      ? el("div", { class: "category__heading category__heading--titoli" }, [renderTitles(section, cat, titleId), subtitle])
+      // Sezioni a scorrimento: il nome grande è nella riga agganciata in alto, qui resta un'intestazione piccola che
+      // separa le categorie; quella della prima categoria ripeterebbe il titolo subito sopra (classe --prima)
+      : el("div", { class: "category__heading" + (section.paged === true ? "" : " category__heading--piccola" + (index === 0 ? " category__heading--prima" : "") + (subtitle ? "" : " category__heading--sola")) },
+          [el("h2", { class: "category__title", id: titleId, text: tr(cat, "label") }), subtitle]);
     var wrapper = el("section", { class: "category category--" + section.type, id: "cat-" + cat.id, "aria-labelledby": titleId, "data-nav-label": tr(cat, "label") }, [heading]);
     wrapper.style.setProperty("--i", String(Math.min(index, 12)));
 
@@ -963,6 +1079,20 @@
   // ---------------------------------------------------------------- Subnav + scrollspy
   function renderSubnav(section) {
     subnavEl.textContent = "";
+    navTitlesEl.textContent = "";
+    navEl.classList.toggle("menu-nav--titoli", isPaged(section)); // sezioni a pagine: chip sovrapposte, vedi syncTitles
+    navTitlesEl.setAttribute("aria-label", t("categoriesLabel"));
+    navTitlesEl.setAttribute("role", "navigation");
+
+    /** Titolo di una categoria nella riga agganciata (sezioni a scorrimento): al clic la pagina va a quella categoria. */
+    function addTitle(catId, label, href) {
+      var link = el("a", { class: "titoli__voce", href: href, "data-cat": catId, text: label });
+      link.addEventListener("click", function (e) {
+        e.preventDefault();
+        scrollChip(catId);
+      });
+      navTitlesEl.appendChild(link);
+    }
 
     /** Chip di una categoria: link all'ancora; `onClick` gestisce il clic (preventDefault già fatto). */
     function addChip(catId, label, href, onClick) {
@@ -990,12 +1120,21 @@
         addChip(cat.id, tr(cat, "label"), "#" + section.id + "/" + cat.id, function () { setCategory(section, cat.id); });
       });
     } else {
-      // Una chip per ogni categoria effettivamente renderizzata
+      // Sezione a scorrimento: niente chip, un titolo per ogni categoria effettivamente renderizzata
       Array.prototype.forEach.call(mainEl.querySelectorAll(NAV_TARGETS), function (node) {
         var catId = node.id.replace(/^cat-/, "");
-        addChip(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id, function () { scrollChip(catId); });
+        addTitle(catId, node.getAttribute("data-nav-label") || catId, "#" + node.id);
       });
     }
+  }
+
+  /** Verso del cambio pagina: 1 = avanti, -1 = indietro, 0 = nessuno (stessa categoria o provenienza sconosciuta). */
+  function pageDirection(section, fromCatId) {
+    var ids = visibleCategories(section).map(function (cat) { return cat.id; });
+    var current = currentCategory(section);
+    var a = ids.indexOf(fromCatId), b = current ? ids.indexOf(current.id) : -1;
+    if (a === -1 || b === -1 || a === b) return 0;
+    return b > a ? 1 : -1;
   }
 
   /** Porta la pagina all'inizio del menu; senza `always` non scende mai (se l'utente è ancora sull'header resta dov'è). */
@@ -1011,8 +1150,9 @@
    */
   function setCategory(section, catId, opts) {
     opts = opts || {};
+    var from = currentCategory(section);
     activeCategory[section.id] = catId;
-    renderActive(true, true);
+    renderActive(true, true, from ? from.id : null);
     updateHash(section.id + "/" + catId);
     scrollToMenuTop();
     if (opts.focus) mainEl.focus({ preventScroll: true });
@@ -1025,6 +1165,7 @@
 
   /** Evidenzia la chip attiva e la centra nella subnav senza scrollare la pagina. */
   function markChip(catId) {
+    markTitle(catId); // sezioni a scorrimento: la riga dei titoli nella nav segue la categoria
     Array.prototype.forEach.call(subnavEl.children, function (chip) {
       var on = chip.getAttribute("data-cat") === catId;
       if (on) chip.setAttribute("aria-current", "true");
@@ -1095,20 +1236,28 @@
   });
 
   // ---------------------------------------------------------------- Cambio sezione
-  /** Ridisegna sezione attiva + subnav + scrollspy. animate=false: nessuna animazione d'ingresso. keepSubnav=true: lascia le chip esistenti (cambio categoria in una sezione a pagine). */
-  function renderActive(animate, keepSubnav) {
+  /**
+   * Ridisegna sezione attiva + subnav + scrollspy. animate=false: nessuna animazione d'ingresso. keepSubnav=true: lascia
+   * le chip esistenti (cambio categoria in una sezione a pagine). fromCatId: categoria da cui si arriva in una sezione a
+   * pagine; i piatti entrano dal lato giusto (classi cambio-avanti / cambio-indietro) e la riga dei titoli scorre.
+   */
+  function renderActive(animate, keepSubnav, fromCatId) {
     var section = findSection(activeSectionId);
     if (!section) return;
     mainEl.textContent = "";
     mainEl.appendChild(renderSection(section));
     // Riavvia l'animazione di ingresso: rimuove la classe, forza il reflow, la riaggiunge
-    mainEl.classList.remove("is-entering");
+    mainEl.classList.remove("is-entering", "cambio-avanti", "cambio-indietro");
     mainEl.classList.toggle("no-anim", !animate);
+    var dir = animate && isPaged(section) ? pageDirection(section, fromCatId) : 0;
+    if (dir) mainEl.classList.add(dir > 0 ? "cambio-avanti" : "cambio-indietro");
     void mainEl.offsetWidth;
     mainEl.classList.add("is-entering");
     if (!keepSubnav) renderSubnav(section);
     setupScrollSpy();
     syncPager(true);
+    alignTitles(dir ? fromCatId : null);
+    syncTitles();
     syncToTop();
   }
 
@@ -1127,18 +1276,20 @@
     // Sezione a pagine con una categoria richiesta: la imposta prima del render
     var pagedCat = null;
     var catChanged = false;
+    var fromCat = null;
     if (isPaged(section) && opts.category) {
       visibleCategories(section).forEach(function (cat) {
         if (cat.id === opts.category) pagedCat = cat.id;
       });
       if (pagedCat) {
-        catChanged = currentCategory(section).id !== pagedCat;
+        fromCat = currentCategory(section).id;
+        catChanged = fromCat !== pagedCat;
         activeCategory[id] = pagedCat;
       }
     }
 
     if (changed || catChanged || !mainEl.firstChild || mainEl.querySelector(".menu__notice")) {
-      renderActive(true, !changed && catChanged && subnavEl.children.length > 0);
+      renderActive(true, !changed && catChanged && subnavEl.children.length > 0, !changed && catChanged ? fromCat : null);
     }
 
     if (!opts.keepHash) updateHash(opts.category ? id + "/" + opts.category : id);
@@ -1193,9 +1344,12 @@
   window.addEventListener("scroll", function () {
     syncToTop();
     syncPager();
+    syncTitles();
     spyUpdate();
   }, { passive: true });
-  window.addEventListener("resize", function () { syncPager(); });
+  window.addEventListener("resize", function () { syncPager(); alignTitles(); syncTitles(); });
+  // Il carattere dei titoli arriva dopo il primo disegno e ne cambia la larghezza: la riga va centrata di nuovo
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { alignTitles(); });
   if (toTopEl) {
     toTopEl.hidden = false;
     setToTop(false);

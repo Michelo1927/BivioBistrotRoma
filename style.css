@@ -455,6 +455,32 @@ button.chip {
   border-bottom-color: var(--accent);
 }
 
+/* Sezioni a pagine (Cucina): in cima alla categoria la navigazione è la riga dei titoli grandi (.titoli), quindi le chip
+   non occupano spazio: stanno sovrapposte sotto le tab e compaiono quando i titoli escono dallo schermo (script.js: syncTitles) */
+/* Stessa resa delle sezioni a scorrimento, dove i titoli sono dentro la nav: nessuna riga tra tab e titoli, titoli subito sotto */
+.menu-nav--titoli { border-bottom-color: transparent; }
+.menu-nav--titoli + .menu { padding-top: .3rem; }
+.menu-nav--titoli .subnav {
+  position: absolute;
+  top: 100%; /* copre il bordo inferiore della nav */
+  left: 0;
+  right: 0;
+  margin: 0;
+  padding: 0 var(--gutter);
+  background: rgba(253, 244, 227, .97);
+  border-bottom: 1px solid var(--line);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-6px);
+  transition: opacity .2s var(--ease), transform .2s var(--ease), visibility 0s linear .2s;
+}
+.menu-nav--titoli .subnav.is-visibile {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition-delay: 0s;
+}
+
 /* ---------- Contenitore menu ---------- */
 .menu {
   max-width: var(--maxw);
@@ -522,6 +548,93 @@ button.chip {
   font-weight: 500;
   font-size: 1.15rem;
   color: var(--muted);
+}
+
+/* Sezioni a pagine: il titolo è una riga di titoli, come un carosello. Quello della categoria aperta è grande e al
+   centro; ai lati, più piccoli e sbiaditi, il precedente e il successivo, tagliati dai bordi dello schermo.
+   La riga non si trascina (overflow: hidden): la sposta script.js (alignTitles) quando si tocca un titolo. */
+.category__heading--titoli {
+  display: block;
+  text-align: center;
+  /* Riga sotto i titoli da bordo a bordo, come quella della nav nelle altre sezioni */
+  margin: 0 calc(-1 * var(--gutter)) 1rem;
+  padding-bottom: .35rem;
+}
+.category__heading--titoli .titoli { margin: 0; }
+/* La prima fila di piatti ha la sua riga in alto: subito sotto quella dei titoli farebbe doppione, si taglia via */
+.category__heading--titoli + .dish-grid { clip-path: inset(1px 0 0 0); }
+.titoli {
+  position: relative; /* riferimento per offsetLeft (script.js: titleCenter) */
+  display: flex;
+  align-items: baseline;
+  gap: 1.1rem;
+  margin: 0 calc(-1 * var(--gutter)); /* da bordo a bordo dello schermo */
+  padding: 0 50vw; /* spazio ai lati: anche il primo e l'ultimo titolo possono stare al centro */
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent);
+}
+.titoli__voce {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  font-family: var(--serif);
+  font-weight: 500;
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  line-height: 1.15;
+  font-variant-numeric: lining-nums;
+  color: color-mix(in srgb, var(--muted) 70%, transparent);
+  text-decoration: none;
+  transform-origin: 50% 75%; /* circa la linea di base: lo scambio di grandezza non fa saltare il testo */
+  transition: color .2s var(--ease);
+}
+a.titoli__voce:hover { color: var(--ink); }
+.titoli__voce--attiva { color: var(--ink); font-size: clamp(1.75rem, 4.5vw, 2.5rem); } /* come .category__title */
+/* Cambio pagina: il titolo che diventa attivo cresce, quello che lo era si rimpicciolisce (la riga intanto scorre) */
+.titoli__voce--entra { animation: titolo-entra .38s var(--ease) both; }
+.titoli__voce--esce { animation: titolo-esce .38s var(--ease) both; }
+@keyframes titolo-entra {
+  from { transform: scale(var(--scala-entra, .68)); color: color-mix(in srgb, var(--muted) 70%, transparent); }
+  to   { transform: none; color: var(--ink); }
+}
+@keyframes titolo-esce {
+  from { transform: scale(var(--scala-esce, 1.46)); color: var(--ink); }
+  to   { transform: none; color: color-mix(in srgb, var(--muted) 70%, transparent); }
+}
+
+/* Sezioni a scorrimento (Cantina, Distillati, Caffetteria): la stessa riga di titoli sta agganciata nella nav, sotto le
+   tab, e segue la categoria che si sta leggendo (script.js: markTitle). Stesse grandezze della riga di Cucina. */
+.titoli--fissa { margin-top: .35rem; }
+.titoli--fissa:empty { display: none; }
+.titoli--fissa .titoli__voce { padding: .2rem 0 0; }
+.titoli--fissa { padding-bottom: .35rem; }
+
+/* Nelle stesse sezioni, a schermo, le intestazioni dentro la pagina sono piccole: servono solo a separare le categorie.
+   Quella della prima categoria sta subito sotto il titolo grande con lo stesso nome: si nasconde (resta il sottotitolo, se c'è).
+   In stampa la nav non c'è e le intestazioni tornano grandi. */
+@media screen {
+  .category__heading--piccola { align-items: baseline; padding-bottom: .5rem; }
+  .category__heading--piccola .category__title {
+    font-family: var(--sans);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .12em;
+    line-height: 1.4;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .category__heading--piccola .category__subtitle { font-size: 1rem; }
+  .category__heading--prima .category__title,
+  .category__heading--prima.category__heading--sola {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 
 /* ---------- Pager categorie ---------- */
@@ -1264,6 +1377,24 @@ button.chip {
 .is-entering:not(.no-anim) .category--food .category__heading {
   animation: enter .45s var(--ease) both;
 }
+/* Cambio pagina in una sezione a pagine: la riga dei titoli resta ferma (si anima da sé) e i piatti entrano tutti
+   insieme dal lato verso cui si va. Lo spostamento è minore del margine laterale: nessuna barra di scorrimento. */
+@keyframes pagina-da-destra {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pagina-da-sinistra {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: none; }
+}
+.menu.cambio-avanti .category__heading,
+.menu.cambio-indietro .category__heading,
+.menu.cambio-avanti:not(.no-anim) .dish,
+.menu.cambio-indietro:not(.no-anim) .dish { animation: none; }
+.menu.cambio-avanti:not(.no-anim) .dish-grid,
+.menu.cambio-avanti:not(.no-anim) .menu-notes { animation: pagina-da-destra .38s var(--ease) both; }
+.menu.cambio-indietro:not(.no-anim) .dish-grid,
+.menu.cambio-indietro:not(.no-anim) .menu-notes { animation: pagina-da-sinistra .38s var(--ease) both; }
 
 /* ---------- Modale scelta lingua ---------- */
 html.is-modal-open { overflow: hidden; }
