@@ -271,20 +271,20 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   box-shadow: 0 8px 24px rgba(42, 18, 22, .12);
   text-align: left;
   transform-origin: top left; /* si apre dalla pillola */
-  animation: tendina-in .38s ease-out both; /* stessa apertura del menu della lingua */
+  animation: tendina-in .3s ease-out both; /* stessa apertura del menu della lingua */
 }
 /* All'apertura (classe is-aprendo, messa da script.js solo in quel momento: il pannello viene ridisegnato ogni minuto
    e le righe non devono rianimarsi) titolo e righe scendono uno dopo l'altro. Le righe sono display: contents: si animano le celle. */
 .status-panel.is-aprendo .status-panel__title,
-.status-panel.is-aprendo .hours__row > * { animation: tendina-voce-in .26s ease-out both; }
-.status-panel.is-aprendo .status-panel__title { animation-delay: .12s; }
-.status-panel.is-aprendo .hours__row:nth-child(1) > * { animation-delay: .16s; }
-.status-panel.is-aprendo .hours__row:nth-child(2) > * { animation-delay: .2s; }
-.status-panel.is-aprendo .hours__row:nth-child(3) > * { animation-delay: .24s; }
-.status-panel.is-aprendo .hours__row:nth-child(4) > * { animation-delay: .28s; }
-.status-panel.is-aprendo .hours__row:nth-child(5) > * { animation-delay: .32s; }
-.status-panel.is-aprendo .hours__row:nth-child(6) > * { animation-delay: .36s; }
-.status-panel.is-aprendo .hours__row:nth-child(7) > * { animation-delay: .4s; }
+.status-panel.is-aprendo .hours__row > * { animation: tendina-voce-in .22s ease-out both; }
+.status-panel.is-aprendo .status-panel__title { animation-delay: .09s; }
+.status-panel.is-aprendo .hours__row:nth-child(1) > * { animation-delay: .12s; }
+.status-panel.is-aprendo .hours__row:nth-child(2) > * { animation-delay: .15s; }
+.status-panel.is-aprendo .hours__row:nth-child(3) > * { animation-delay: .18s; }
+.status-panel.is-aprendo .hours__row:nth-child(4) > * { animation-delay: .21s; }
+.status-panel.is-aprendo .hours__row:nth-child(5) > * { animation-delay: .24s; }
+.status-panel.is-aprendo .hours__row:nth-child(6) > * { animation-delay: .27s; }
+.status-panel.is-aprendo .hours__row:nth-child(7) > * { animation-delay: .3s; }
 .status-panel[hidden] { display: none; }
 .status-panel__title {
   margin: 0 0 .4rem;
@@ -339,7 +339,7 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   box-shadow: 0 8px 24px rgba(42, 18, 22, .12);
   transform-origin: top right; /* si apre dalla pillola */
   /* ease-out e mezzo secondo: con --ease (partenza molto rapida) il movimento finiva in un decimo di secondo e non si vedeva */
-  animation: tendina-in .38s ease-out both;
+  animation: tendina-in .3s ease-out both;
 }
 .lang-panel[hidden] { display: none; }
 /* Apertura dei due pannelli a tendina (lingua e orari): crescono dall'angolo della pillola, poi le voci scendono una dopo l'altra */
@@ -353,10 +353,10 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   from { opacity: 0; transform: translateY(-12px); }
   to   { opacity: 1; transform: none; }
 }
-.lang-panel__voce { animation: tendina-voce-in .26s ease-out both; }
-.lang-panel__voce:nth-child(1) { animation-delay: .14s; }
-.lang-panel__voce:nth-child(2) { animation-delay: .21s; }
-.lang-panel__voce:nth-child(3) { animation-delay: .28s; }
+.lang-panel__voce { animation: tendina-voce-in .22s ease-out both; }
+.lang-panel__voce:nth-child(1) { animation-delay: .1s; }
+.lang-panel__voce:nth-child(2) { animation-delay: .16s; }
+.lang-panel__voce:nth-child(3) { animation-delay: .22s; }
 
 /* Cambio lingua (script.js: switchLanguage): i testi escono in dissolvenza, vengono riscritti nella nuova lingua e
    rientrano; il logo e la forma della pagina restano fermi, così non sembra un ricaricamento.
