@@ -1041,7 +1041,7 @@
         "aria-selected": selected ? "true" : "false", "aria-controls": "menu",
         tabindex: selected ? "0" : "-1", "data-section": section.id
       }, [el("span", { class: "tab__fondo", "aria-hidden": "true" }), tr(section, "label")]);
-      btn.addEventListener("click", function () { setSection(section.id, { scroll: true }); });
+      btn.addEventListener("click", function () { switchSection(section.id, { scroll: true }); });
       tabsEl.appendChild(btn);
     });
   }
@@ -1100,9 +1100,11 @@
     }
   }
 
-  function syncTabs() {
+  /** Allinea le tab alla sezione `id` (senza argomento: quella attiva): aria-selected, tabindex, tab in vista. */
+  function syncTabs(id) {
+    id = id || activeSectionId;
     Array.prototype.forEach.call(tabsEl.children, function (btn) {
-      var on = btn.getAttribute("data-section") === activeSectionId;
+      var on = btn.getAttribute("data-section") === id;
       btn.setAttribute("aria-selected", on ? "true" : "false");
       btn.setAttribute("tabindex", on ? "0" : "-1");
       // Riga tab scorrevole (schermi stretti): porta la tab attiva in vista senza scrollare la pagina
@@ -1111,13 +1113,13 @@
       }
     });
     mainEl.setAttribute("role", "tabpanel");
-    mainEl.setAttribute("aria-labelledby", "tab-" + activeSectionId);
+    mainEl.setAttribute("aria-labelledby", "tab-" + id);
   }
 
   /** Tastiera: frecce, Home, End spostano focus e attivano la tab. */
   tabsEl.addEventListener("keydown", function (e) {
     var ids = MENU.sections.map(function (s) { return s.id; });
-    var idx = ids.indexOf(activeSectionId);
+    var idx = ids.indexOf(pendingSectionId || activeSectionId); // la tab già evidenziata, anche se il contenuto sta ancora cambiando
     var next;
     if (e.key === "ArrowRight") next = (idx + 1) % ids.length;
     else if (e.key === "ArrowLeft") next = (idx - 1 + ids.length) % ids.length;
@@ -1125,7 +1127,7 @@
     else if (e.key === "End") next = ids.length - 1;
     else return;
     e.preventDefault();
-    setSection(ids[next], { scroll: false });
+    switchSection(ids[next], { scroll: false });
     var btn = document.getElementById("tab-" + ids[next]);
     if (btn) btn.focus();
   });
@@ -1315,9 +1317,46 @@
     syncToTop();
   }
 
+  var pendingSectionId = null;   // sezione scelta con una tab mentre il contenuto vecchio sta ancora uscendo
+  var sectionSwitchTimer = null;
+
+  /**
+   * Cambio di sezione scelto dall'utente (clic o tastiera sulle tab), con la stessa transizione del cambio lingua:
+   * la tab cambia subito (il colore scorre), il contenuto sotto esce in dissolvenza (classe sezione-esce su <html>),
+   * viene ridisegnato (setSection) e rientra (sezione-entra). Le tab restano ferme. Con il movimento ridotto, o se la
+   * sezione è già quella, si passa direttamente a setSection.
+   */
+  function switchSection(id, opts) {
+    var root = document.documentElement;
+    var shown = pendingSectionId || activeSectionId;
+    if (!findSection(id) || id === shown || !activeSectionId || reducedMotion.matches) {
+      if (id !== shown) setSection(id, opts);
+      return;
+    }
+    var ids = MENU.sections.map(function (sec) { return sec.id; });
+    window.clearTimeout(sectionSwitchTimer);
+    pendingSectionId = id;
+    syncTabs(id);
+    flowTabs(ids.indexOf(shown), ids.indexOf(id));
+    root.classList.remove("sezione-entra");
+    root.classList.add("sezione-esce");
+    sectionSwitchTimer = window.setTimeout(function () {
+      var o = {};
+      Object.keys(opts || {}).forEach(function (key) { o[key] = opts[key]; });
+      o.noFlow = true; // il colore delle tab sta già scorrendo
+      o.noAnim = true; // niente ingresso piatto per piatto: entra tutto insieme
+      pendingSectionId = null;
+      setSection(id, o);
+      root.classList.remove("sezione-esce");
+      root.classList.add("sezione-entra");
+      sectionSwitchTimer = window.setTimeout(function () { root.classList.remove("sezione-entra"); }, 420);
+    }, 170);
+  }
+
   /**
    * @param {string} id  id sezione
-   * @param {{scroll?: boolean, category?: string, keepHash?: boolean}=} opts
+   * @param {{scroll?: boolean, category?: string, keepHash?: boolean, noFlow?: boolean, noAnim?: boolean}=} opts
+   *   noFlow: non animare il colore delle tab; noAnim: nessuna animazione d'ingresso dei piatti (li usa switchSection)
    */
   function setSection(id, opts) {
     opts = opts || {};
@@ -1327,7 +1366,7 @@
     var previousId = activeSectionId;
     activeSectionId = id;
     syncTabs();
-    if (changed && previousId) {
+    if (changed && previousId && !opts.noFlow) {
       var ids = MENU.sections.map(function (sec) { return sec.id; });
       flowTabs(ids.indexOf(previousId), ids.indexOf(id));
     }
@@ -1348,7 +1387,7 @@
     }
 
     if (changed || catChanged || !mainEl.firstChild || mainEl.querySelector(".menu__notice")) {
-      renderActive(true, !changed && catChanged && subnavEl.children.length > 0, !changed && catChanged ? fromCat : null);
+      renderActive(!opts.noAnim, !changed && catChanged && subnavEl.children.length > 0, !changed && catChanged ? fromCat : null);
     }
 
     if (!opts.keepHash) updateHash(opts.category ? id + "/" + opts.category : id);

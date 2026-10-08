@@ -379,6 +379,17 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 .lingua-entra .menu-nav__inner,
 .lingua-entra .status-pill__text,
 .lingua-entra .lang-pill__code { animation: lingua-compare .38s ease-out both; }
+/* Cambio di sezione dalle tab (script.js: switchSection): stesso effetto, ma solo sul contenuto sotto le tab
+   (titoli o chip delle categorie e menu); le tab restano ferme, lì scorre il colore. */
+.sezione-esce .menu,
+.sezione-esce .titoli--fissa,
+.sezione-esce .subnav {
+  opacity: 0;
+  transition: opacity .16s ease-in, transform .16s ease-in;
+}
+.sezione-esce .menu { transform: translateY(8px); }
+.sezione-entra .menu { animation: lingua-entra .38s ease-out both; }
+.sezione-entra .titoli--fissa { animation: lingua-compare .38s ease-out both; }
 @keyframes lingua-entra {
   from { opacity: 0; transform: translateY(-8px); }
   to   { opacity: 1; transform: none; }
