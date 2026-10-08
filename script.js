@@ -1039,11 +1039,65 @@
       var btn = el("button", {
         class: "tab", type: "button", role: "tab", id: "tab-" + section.id,
         "aria-selected": selected ? "true" : "false", "aria-controls": "menu",
-        tabindex: selected ? "0" : "-1", "data-section": section.id, text: tr(section, "label")
-      });
+        tabindex: selected ? "0" : "-1", "data-section": section.id
+      }, [el("span", { class: "tab__fondo", "aria-hidden": "true" }), tr(section, "label")]);
       btn.addEventListener("click", function () { setSection(section.id, { scroll: true }); });
       tabsEl.appendChild(btn);
     });
+  }
+
+  var tabAnims = []; // animazioni in corso del colore delle tab: un nuovo cambio le annulla
+
+  /**
+   * Fa scorrere il colore, come un liquido, dalla tab di indice `from` a quella di indice `to`: esce dalla tab lasciata
+   * nel verso dello spostamento, attraversa quelle in mezzo ed entra in quella scelta. Il fondo (.tab__fondo) è una
+   * goccia con le estremità tonde: qui la si sposta (translateX) e la si inclina (skewX) nel verso del movimento.
+   *
+   * Il liquido è uno solo: tutte le tab seguono la stessa linea del tempo (stessa durata, stessa curva) e ognuna ne
+   * occupa un tratto. Così quello che esce da una tab è, istante per istante, quello che entra nella successiva, e la
+   * tab scelta finisce di riempirsi solo quando la precedente si è svuotata. La curva parte piano, corre al centro
+   * (le tab di mezzo passano veloci) e rallenta all'arrivo.
+   *
+   * Va chiamata dopo syncTabs: a riposo vale il CSS (fondo pieno solo sulla tab attiva). Senza Web Animations o con il
+   * movimento ridotto non fa nulla e il cambio è immediato.
+   */
+  function flowTabs(from, to) {
+    tabAnims.forEach(function (anim) { anim.cancel(); });
+    tabAnims = [];
+    var tabs = tabsEl.children;
+    if (from === to || !tabs[from] || !tabs[to] || reducedMotion.matches || typeof tabs[to].animate !== "function") return;
+    var sgn = to > from ? 1 : -1;
+    var n = Math.abs(to - from);
+    var opts = { duration: 320 + 70 * n, easing: "cubic-bezier(.5, 0, .3, 1)" }; // 390 ms tra due tab vicine, 530 da un capo all'altro
+    var TILT = 16; // inclinazione del fronte, in gradi
+
+    /** Posizione della goccia: x in percentuale della sua larghezza (0 = tab piena, ±100 = fuori), inclinazione in gradi. */
+    function at(x, tilt) {
+      return "translateX(" + (x * sgn) + "%) skewX(" + (-tilt * sgn) + "deg)";
+    }
+    function run(node, frames) {
+      if (node) tabAnims.push(node.animate(frames, opts));
+    }
+    for (var k = 0; k <= n; k++) {
+      var tab = tabs[from + sgn * k];
+      var fondo = tab.querySelector(".tab__fondo");
+      var enter = (k - 1) / n; // tratto della linea del tempo in cui il liquido entra in questa tab...
+      var leave = (k + 1) / n; // ...e quello in cui ne è uscito del tutto
+      if (k === 0) {
+        // Tab lasciata: il liquido si inclina e scivola fuori
+        run(fondo, [{ transform: at(0, 0), offset: 0 }, { transform: at(100, TILT), offset: leave }, { transform: at(100, TILT), offset: 1 }]);
+      } else if (k < n) {
+        // Tab di mezzo: la goccia la attraversa da parte a parte, inclinata, senza fermarsi
+        run(fondo, [{ transform: at(-100, TILT), offset: 0 }, { transform: at(-100, TILT), offset: enter }, { transform: at(100, TILT), offset: leave }, { transform: at(100, TILT), offset: 1 }]);
+      } else {
+        // Tab scelta: il fronte entra e si raddrizza mentre la riempie
+        run(fondo, [{ transform: at(-100, TILT), offset: 0 }, { transform: at(-100, TILT), offset: enter }, { transform: at(0, 0), offset: 1 }]);
+        // Il testo diventa chiaro quando il colore gli arriva sopra, non prima (a riposo lo sarebbe subito, dal CSS)
+        var style = window.getComputedStyle(document.documentElement);
+        var ink = style.getPropertyValue("--ink"), light = style.getPropertyValue("--btn-ink");
+        run(tab, [{ color: ink, offset: 0 }, { color: ink, offset: enter + 0.35 / n }, { color: light, offset: enter + 0.8 / n }, { color: light, offset: 1 }]);
+      }
+    }
   }
 
   function syncTabs() {
@@ -1270,8 +1324,13 @@
     var section = findSection(id);
     if (!section) return;
     var changed = id !== activeSectionId;
+    var previousId = activeSectionId;
     activeSectionId = id;
     syncTabs();
+    if (changed && previousId) {
+      var ids = MENU.sections.map(function (sec) { return sec.id; });
+      flowTabs(ids.indexOf(previousId), ids.indexOf(id));
+    }
 
     // Sezione a pagine con una categoria richiesta: la imposta prima del render
     var pagedCat = null;

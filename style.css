@@ -510,14 +510,33 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   font-weight: 500;
   line-height: 1.2;
   letter-spacing: .02em;
-  transition: border-color .2s var(--ease), background-color .2s var(--ease), color .2s var(--ease);
+  /* Il colore pieno della tab attiva è un livello a parte (.tab__fondo): vedi sotto */
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: border-color .3s var(--ease), color .3s var(--ease);
 }
 .tab:hover { border-color: var(--accent); }
 .tab[aria-selected="true"] {
-  background: var(--btn-bg);
   border-color: var(--btn-bg);
   color: var(--btn-ink);
 }
+/* Fondo pieno della tab attiva: un livello a parte (span creato da script.js), una "goccia" più larga della tab con le
+   estremità tonde, che a riposo copre tutta la tab oppure sta fuori a sinistra. Al cambio di sezione script.js
+   (flowTabs) la fa scorrere come un liquido: esce dalla tab lasciata, attraversa di corsa quelle in mezzo ed entra
+   in quella scelta, con il fronte curvo e inclinato nel verso del movimento. */
+.tab__fondo {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -1.4rem;  /* le estremità tonde stanno fuori dalla tab: da ferma il colore la copre per intero */
+  right: -1.4rem;
+  z-index: -1;
+  border-radius: 999px;
+  background: var(--btn-bg);
+  transform: translateX(-101%); /* fuori, a sinistra */
+}
+.tab[aria-selected="true"] .tab__fondo { transform: none; }
 
 /* Subnav: chip testuali; .subnav è il contenitore di riferimento per offsetLeft (script.js) */
 .subnav {
