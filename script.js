@@ -1984,9 +1984,48 @@
     langPillEl.setAttribute("aria-label", t("langLabel") + (name ? ": " + name : ""));
   }
 
+  // Easter egg: cinque tocchi rapidi sulla pillola e la sigla fa un brindisi in più lingue, poi torna quella di prima.
+  // Cambia solo il testo a schermo: l'aria-label della pillola resta «Lingua: …».
+  var BRINDISI = ["Cin cin", "Cheers", "Santé", "Prost"];
+  var brindisiTocchi = 0;
+  var brindisiUltimo = 0;
+  var brindisiTimer = null;
+
+  function brindisi() {
+    var code = langPillEl.querySelector(".lang-pill__code");
+    if (!code) return;
+    var i = 0;
+    langPillEl.classList.add("lang-pill--brindisi");
+    (function passo() {
+      if (i >= BRINDISI.length) {
+        brindisiTimer = null;
+        langPillEl.classList.remove("lang-pill--brindisi");
+        code.classList.remove("lang-pill__code--brindisi");
+        renderLangPill();
+        return;
+      }
+      code.textContent = BRINDISI[i++];
+      // togliere e rimettere la classe fa ripartire l'animazione a ogni parola
+      code.classList.remove("lang-pill__code--brindisi");
+      void code.offsetWidth;
+      code.classList.add("lang-pill__code--brindisi");
+      brindisiTimer = window.setTimeout(passo, 750);
+    })();
+  }
+
   // Pillola = pulsante: apre/chiude il menu; si chiude con clic fuori o Esc, e dopo la scelta di una lingua
   if (langPillEl && langPanelEl) {
     langPillEl.addEventListener("click", function () {
+      if (brindisiTimer) return;
+      var ora = Date.now();
+      brindisiTocchi = ora - brindisiUltimo < 450 ? brindisiTocchi + 1 : 1;
+      brindisiUltimo = ora;
+      if (brindisiTocchi >= 5) {
+        brindisiTocchi = 0;
+        setLangPanel(false);
+        brindisi();
+        return;
+      }
       setLangPanel(langPanelEl.hidden);
     });
     Array.prototype.forEach.call(langPanelEl.querySelectorAll("[data-lang]"), function (b) {

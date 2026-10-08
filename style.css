@@ -326,6 +326,18 @@ a.pill-link[href]:hover { border-color: var(--accent); }
 }
 .lang-pill:hover, .lang-pill.is-open { border-color: var(--accent); }
 .lang-pill.is-open .status-pill__chevron { transform: rotate(180deg); }
+/* Easter egg (script.js: brindisi): la sigla diventa per un attimo «Cin cin», «Cheers»…; la freccina lascia il posto alla parola */
+.lang-pill--brindisi { border-color: var(--accent); letter-spacing: .02em; }
+.lang-pill.lang-pill--brindisi .status-pill__chevron { display: none; } /* più specifica della regola che la ridà tra 380 e 420px */
+.lang-pill__code--brindisi { display: inline-block; animation: brindisi-in .32s ease-out both; }
+@keyframes brindisi-in {
+  0%   { opacity: 0; transform: translateY(6px) rotate(-8deg); }
+  60%  { transform: translateY(-1px) rotate(3deg); } /* il bicchiere che si alza e tocca */
+  100% { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lang-pill__code--brindisi { animation: none; }
+}
 .lang-panel {
   position: absolute;
   top: calc(100% + 6px);
