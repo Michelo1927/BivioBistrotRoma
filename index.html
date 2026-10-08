@@ -17,24 +17,30 @@
 
   <!-- CACHE: a ogni modifica di style.css, menu-data.js o script.js cambia la versione ?v= (data AAAAMMGG),
        altrimenti i telefoni dei clienti possono mostrare il menu vecchio dalla cache. -->
-  <link rel="stylesheet" href="style.css?v=20261008e">
+  <link rel="stylesheet" href="style.css?v=20261008g">
   <!-- Script classici (no moduli): funziona anche da file:// — l'ordine conta -->
-  <script defer src="menu-data.js?v=20261008e"></script>
-  <script defer src="script.js?v=20261008e"></script>
+  <script defer src="menu-data.js?v=20261008g"></script>
+  <script defer src="script.js?v=20261008g"></script>
 </head>
 <body>
   <a class="skip-link" href="#menu" data-i18n="skip">Vai al menu</a>
 
   <header class="site-header" id="top" tabindex="-1">
-    <!-- Barra in alto: a sinistra lo stato aperto/chiuso; a destra i link rapidi (solo icona) e il pulsante della lingua -->
+    <!-- Barra in alto: a sinistra lo stato aperto/chiuso; a destra i link rapidi (solo icona) e la pillola della lingua -->
     <div class="site-header__bar">
       <button type="button" class="status-pill" aria-expanded="false" aria-controls="status-panel" hidden></button>
       <div class="site-header__actions">
         <a class="pill-link pill-link--icona" data-link="maps" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.400-6.500 11-6.500 11Z"/><circle cx="12" cy="10" r="2.300"/></svg><span class="visually-hidden" data-i18n="maps">Mappa</span></a>
         <a class="pill-link pill-link--icona" data-link="whatsapp" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 20l1.300-4.100A8 8 0 1 1 8.200 18.800L4 20Z"/><path d="M9.200 9.300c.2 2.800 2.700 5 5.500 5.300l1.100-1.400-2-1-.9.700a4 4 0 0 1-1.900-1.900l.7-.9-1-2-1.500 1.200Z"/></svg><span class="visually-hidden" data-i18n="whatsapp">WhatsApp</span></a>
       </div>
-      <!-- Lingua: pulsante con una bandiera divisa in diagonale (metà italiana, metà inglese) che apre il modale di scelta lingua -->
-      <button type="button" class="pill-link pill-link--icona lang-open" aria-haspopup="dialog" aria-label="Lingua" data-i18n-aria="langLabel"><svg class="lang-open__flag" viewBox="0 0 60 40" width="22" height="15" aria-hidden="true" focusable="false"><defs><clipPath id="lingua-it"><path d="M0 0h60L0 40z"/></clipPath><clipPath id="lingua-en"><path d="M60 0v40H0z"/></clipPath></defs><g clip-path="url(#lingua-it)"><path fill="#009246" d="M0 0h20v40H0z"/><path fill="#fff" d="M20 0h20v40H20z"/><path fill="#CE2B37" d="M40 0h20v40H40z"/></g><g clip-path="url(#lingua-en)"><path fill="#012169" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="M0 0l60 40M60 0L0 40"/><path stroke="#C8102E" stroke-width="3" d="M0 0l60 40M60 0L0 40"/><path stroke="#fff" stroke-width="13" d="M30 0v40M0 20h60"/><path stroke="#C8102E" stroke-width="8" d="M30 0v40M0 20h60"/></g><path stroke="#fff" stroke-width="2" d="M60 0L0 40"/></svg></button>
+      <!-- Lingua: pillola con la sigla della lingua attiva; apre un menu a tendina con le lingue (script.js) -->
+      <div class="lang-menu">
+        <button type="button" class="lang-pill" aria-haspopup="true" aria-expanded="false" aria-controls="lang-panel" aria-label="Lingua: Italiano"><span class="lang-pill__code">IT</span><svg class="status-pill__chevron" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6"/></svg></button>
+        <div class="lang-panel" id="lang-panel" hidden>
+          <button type="button" class="lang-panel__voce" data-lang="it" lang="it">Italiano</button>
+          <button type="button" class="lang-panel__voce" data-lang="en" lang="en">English</button>
+        </div>
+      </div>
     </div>
     <div class="status-panel" id="status-panel" hidden></div>
     <h1 class="site-header__title">
@@ -72,8 +78,8 @@
     <p class="site-footer__copy">© <span id="year">2025</span> Bivio Bistrot · Roma</p>
   </footer>
 
-  <!-- Modale di scelta lingua: si apre da solo al primo accesso (se non c'è una scelta esplicita) e dal pulsante
-       con la bandiera nella barra in alto. Contenuto bilingue fisso. -->
+  <!-- Modale di scelta lingua: si apre da solo al primo accesso (se non c'è una scelta esplicita). Dopo, la lingua si
+       cambia dalla pillola nella barra in alto. Contenuto bilingue fisso. -->
   <dialog class="lang-modal" aria-labelledby="lang-modal-title">
     <div class="lang-modal__panel" tabindex="-1">
       <h2 class="lang-modal__title" id="lang-modal-title">

@@ -200,10 +200,11 @@ data { font-variant-numeric: tabular-nums; }
   height: 36px;
   padding: 0;
 }
-.pill-link--icona svg:not(.lang-open__flag) { width: 18px; height: 18px; }
+.pill-link--icona svg { width: 18px; height: 18px; }
 /* Area sensibile più grande del cerchio: 44px in altezza, e in larghezza fino a metà dello spazio tra un pulsante e l'altro */
 .pill-link--icona::after,
-.status-pill::after {
+.status-pill::after,
+.lang-pill::after {
   content: "";
   position: absolute;
   inset: -4px -3px;
@@ -287,15 +288,108 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   to { opacity: 1; transform: none; }
 }
 
-/* Lingua: ultimo pulsante della barra, un po' staccato dai link rapidi; apre il modale di scelta lingua */
-.lang-open { flex: none; margin-left: .375rem; border-color: transparent; cursor: pointer; } /* niente cerchio: il bordo lo ha la bandiera */
-.lang-open:hover .lang-open__flag { box-shadow: 0 0 0 1px var(--accent); }
-/* Bandiera a due metà (italiana / inglese): angoli arrotondati e filetto, per staccare il bianco dal fondo crema */
-.lang-open__flag {
-  border-radius: 2px;
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent);
-  transition: box-shadow .2s var(--ease);
+/* Lingua: pillola gemella di quella degli orari (sigla della lingua attiva + freccina), in fondo alla barra;
+   apre un menu a tendina con le lingue, allineato a destra */
+.lang-menu {
+  position: relative; /* ancora per il menu a tendina */
+  flex: none;
+  margin-left: .375rem;
 }
+.lang-pill {
+  position: relative; /* ancora per l'area sensibile (::after) */
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  height: 36px;
+  padding: 0 .85rem;
+  border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: .08em;
+  cursor: pointer;
+  transition: border-color .2s var(--ease);
+}
+.lang-pill:hover, .lang-pill.is-open { border-color: var(--accent); }
+.lang-pill.is-open .status-pill__chevron { transform: rotate(180deg); }
+.lang-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: .15rem;
+  min-width: 9.5rem;
+  padding: .35rem;
+  background: var(--bg); /* lo stesso fondo dell'area del menu */
+  border: 1px solid var(--line);
+  border-radius: 22px; /* contiene voci a pillola */
+  box-shadow: 0 8px 24px rgba(42, 18, 22, .12);
+  transform-origin: top right; /* si apre dalla pillola */
+  /* ease-out e mezzo secondo: con --ease (partenza molto rapida) il movimento finiva in un decimo di secondo e non si vedeva */
+  animation: lang-panel-in .38s ease-out both;
+}
+.lang-panel[hidden] { display: none; }
+/* Apertura: il menu cresce dall'angolo della pillola, poi le voci scendono una dopo l'altra */
+@keyframes lang-panel-in {
+  0%   { opacity: 0; transform: translateY(-10px) scale(.45); }
+  35%  { opacity: 1; }
+  72%  { transform: scale(1.04); } /* supera di poco la misura finale, poi si assesta */
+  100% { opacity: 1; transform: none; }
+}
+@keyframes lang-voce-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: none; }
+}
+.lang-panel__voce { animation: lang-voce-in .26s ease-out both; }
+.lang-panel__voce:nth-child(1) { animation-delay: .14s; }
+.lang-panel__voce:nth-child(2) { animation-delay: .21s; }
+.lang-panel__voce:nth-child(3) { animation-delay: .28s; }
+
+/* Cambio lingua (script.js: switchLanguage): i testi escono in dissolvenza, vengono riscritti nella nuova lingua e
+   rientrano; il logo e la forma della pagina restano fermi, così non sembra un ricaricamento.
+   Sulla nav e sulle pillole solo opacità: un transform cambierebbe il riferimento degli elementi posizionati al loro interno. */
+.lingua-esce .menu,
+.lingua-esce .site-footer,
+.lingua-esce .menu-nav__inner,
+.lingua-esce .status-pill__text,
+.lingua-esce .lang-pill__code {
+  opacity: 0;
+  transition: opacity .16s ease-in, transform .16s ease-in;
+}
+.lingua-esce .menu,
+.lingua-esce .site-footer { transform: translateY(8px); }
+.lingua-entra .menu,
+.lingua-entra .site-footer { animation: lingua-entra .38s ease-out both; }
+.lingua-entra .menu-nav__inner,
+.lingua-entra .status-pill__text,
+.lingua-entra .lang-pill__code { animation: lingua-compare .38s ease-out both; }
+@keyframes lingua-entra {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes lingua-compare {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.lang-panel__voce {
+  min-height: 40px;
+  padding: 0 1rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink);
+  font-size: .875rem;
+  font-weight: 500;
+  text-align: left;
+  transition: background-color .2s var(--ease), color .2s var(--ease);
+}
+.lang-panel__voce:hover { background: var(--accent-soft); }
+/* Lingua attiva: pillola piena, come la tab selezionata */
+.lang-panel__voce[aria-current="true"] { background: var(--btn-bg); color: var(--btn-ink); }
 
 /* ---------- Onda e bollicine (bordo tra intestazione e menu) ---------- */
 /* Il fondo del menu risale nell'intestazione con un'onda sola, lunga e bassa; poche bollicine sottili
@@ -1464,8 +1558,6 @@ html.is-modal-open { overflow: hidden; }
 }
 .lang-modal__btn:hover,
 .lang-modal__btn:focus-visible { border-color: var(--accent); }
-/* Lingua attiva (solo quando il modale è aperto dal pulsante in alto): pillola piena, come la tab selezionata */
-.lang-modal__btn[aria-current="true"] { border-color: var(--btn-bg); background: var(--btn-bg); color: var(--btn-ink); }
 .lang-modal__name {
   font-size: .9375rem;
   font-weight: 500;
@@ -1578,7 +1670,7 @@ html.is-modal-open { overflow: hidden; }
 }
 
 /* ---------- Barra in alto: più compatta sui telefoni, per far stare il testo della pill di stato ---------- */
-/* Sotto i 380px sparisce anche la freccina della pill: il testo più lungo ("Chiuso · apre domani alle 07:30") entra a 360px */
+/* Sotto i 420px spariscono le freccine delle pillole: il testo più lungo ("Chiuso · apre domani alle 07:30") entra a 360px */
 @media (max-width: 519.98px) {
   /* Intestazione più bassa: logo più piccolo e meno aria, così i piatti cominciano più in alto */
   .site-header { padding-top: 58px; padding-bottom: 30px; }
@@ -1586,17 +1678,22 @@ html.is-modal-open { overflow: hidden; }
   .site-header__overline { margin-top: .6rem; }
   .site-header__bar { gap: .3rem; }
   .site-header__actions { padding-left: .4rem; }
-  .lang-open { width: 30px; margin-left: 0; } /* senza cerchio basta la larghezza della bandiera; l'area sensibile resta larga */
+  .lang-menu { margin-left: 0; }
+  .lang-pill { gap: .2rem; padding: 0 .55rem; font-size: .6875rem; }
   .status-pill { gap: .3rem; padding: 0 .8rem; font-size: .6875rem; letter-spacing: 0; }
 }
-@media (max-width: 379.98px) {
+@media (max-width: 419.98px) {
   .status-pill__chevron { display: none; }
   .site-header__bar { gap: .2rem; }
   .site-header__actions { gap: .25rem; padding-left: .2rem; }
   .pill-link--icona { width: 34px; height: 34px; }
   .pill-link--icona::after { inset: -5px -2px; }
-  .lang-open { width: 26px; }
+  .lang-pill { height: 34px; padding: 0 .6rem; }
   .status-pill { padding: 0 .5rem; }
+}
+/* Tra 380 e 420px lo spazio basta per ridare la freccina alla pillola della lingua (segnala il menu a tendina) */
+@media (min-width: 380px) and (max-width: 419.98px) {
+  .lang-pill .status-pill__chevron { display: block; }
 }
 
 /* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
@@ -1607,7 +1704,7 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .status-pill, .status-panel, .pager, .site-header__actions, .lang-open, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .status-pill, .status-panel, .pager, .site-header__actions, .lang-menu, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
   body, .site-header { background: #fff; }
   .onda { display: none; }
   .site-header__logo { width: 200px; }

@@ -1666,6 +1666,7 @@
     });
     document.documentElement.lang = lang;
     document.title = t("pageTitle");
+    renderLangPill();
     applyLinks();
     applyContacts();
     renderFooterAllergens();
@@ -1704,12 +1705,10 @@
     window.scrollTo({ top: y, behavior: "instant" }); // "instant": "auto" seguirebbe scroll-behavior: smooth del CSS
   }
 
-  // ---------------------------------------------------------------- Modale scelta lingua (primo accesso + pulsante in alto)
+  // ---------------------------------------------------------------- Modale scelta lingua (primo accesso)
   var langModalEl = document.querySelector(".lang-modal");
-  var langOpenEl = document.querySelector(".lang-open");
   var langModalReady = false;
   var langModalClosing = false;
-  var langModalOpener = null; // pulsante che ha aperto il modale (null al primo accesso): riceve il focus alla chiusura
 
   /** true se esiste una scelta esplicita: ?lang= valido oppure valore valido in localStorage. */
   function hasExplicitLanguage() {
@@ -1754,12 +1753,10 @@
     langModalReady = true;
     var dialog = langModalEl;
 
-    // A qualsiasi chiusura: sblocca lo scroll e riporta il focus al pulsante che ha aperto (se c'è)
+    // A qualsiasi chiusura: sblocca lo scroll
     dialog.addEventListener("close", function () {
       document.documentElement.classList.remove("is-modal-open");
       langModalClosing = false;
-      if (langModalOpener && document.contains(langModalOpener)) langModalOpener.focus({ preventScroll: true });
-      langModalOpener = null;
     });
 
     /** Esc o click sul backdrop: conferma la lingua corrente (default it) così il modale non ricompare da solo. */
@@ -1778,24 +1775,15 @@
     });
   }
 
-  /**
-   * Apre il modale di scelta lingua. `opener`: il pulsante in alto (riceve il focus alla chiusura e fa evidenziare
-   * la lingua attiva); null al primo accesso, quando nessuna lingua deve sembrare già scelta.
-   */
-  function openLanguageModal(opener) {
+  /** Apre il modale di scelta lingua (solo al primo accesso: poi la lingua si cambia dalla pillola in alto). */
+  function openLanguageModal() {
     if (!langModalSupported() || langModalEl.open) return;
     setupLanguageModal();
-    langModalOpener = opener || null;
-    Array.prototype.forEach.call(langModalEl.querySelectorAll("[data-lang]"), function (b) {
-      if (opener && b.getAttribute("data-lang") === lang) b.setAttribute("aria-current", "true");
-      else b.removeAttribute("aria-current");
-    });
     document.documentElement.classList.add("is-modal-open");
     try {
       langModalEl.showModal();
     } catch (e) {
       document.documentElement.classList.remove("is-modal-open");
-      langModalOpener = null;
       return;
     }
     // Focus iniziale sul pannello, non su un pulsante: l'anello di focus sembrerebbe una lingua
@@ -1804,12 +1792,81 @@
     if (panel) panel.focus({ preventScroll: true });
   }
 
-  if (langOpenEl) {
-    langOpenEl.addEventListener("click", function () {
-      if (langModalSupported()) { openLanguageModal(langOpenEl); return; }
-      // Nessun <dialog> modale: il pulsante passa direttamente alla lingua successiva
-      var codes = MENU.meta.languages || [];
-      if (codes.length) setLanguage(codes[(codes.indexOf(lang) + 1) % codes.length]);
+  // ---------------------------------------------------------------- Pillola della lingua + menu a tendina
+  var langPillEl = document.querySelector(".lang-pill");
+  var langPanelEl = document.querySelector(".lang-panel");
+
+  /** Apre/chiude il menu a tendina delle lingue e tiene allineati aria-expanded e classe. */
+  function setLangPanel(open) {
+    if (!langPillEl || !langPanelEl) return;
+    langPillEl.setAttribute("aria-expanded", open ? "true" : "false");
+    langPillEl.classList.toggle("is-open", open);
+    langPanelEl.hidden = !open;
+  }
+
+  var langSwitchTimer = null;
+
+  /**
+   * Cambio lingua scelto dall'utente, con una transizione: i testi escono in dissolvenza (classe lingua-esce su <html>),
+   * vengono riscritti (setLanguage) e rientrano (lingua-entra). Con il movimento ridotto, o se la lingua è già quella,
+   * si passa direttamente a setLanguage.
+   */
+  function switchLanguage(code) {
+    var root = document.documentElement;
+    if (code === lang || !hasLang(code) || reducedMotion.matches) {
+      setLanguage(code);
+      return;
+    }
+    window.clearTimeout(langSwitchTimer);
+    root.classList.remove("lingua-entra");
+    root.classList.add("lingua-esce");
+    langSwitchTimer = window.setTimeout(function () {
+      setLanguage(code);
+      root.classList.remove("lingua-esce");
+      root.classList.add("lingua-entra");
+      langSwitchTimer = window.setTimeout(function () { root.classList.remove("lingua-entra"); }, 420);
+    }, 170);
+  }
+
+  /** Sigla e nome accessibile della pillola, voce attiva del menu: nella lingua corrente. */
+  function renderLangPill() {
+    if (!langPillEl || !langPanelEl) return;
+    var code = langPillEl.querySelector(".lang-pill__code");
+    if (code) code.textContent = lang.toUpperCase();
+    var name = "";
+    Array.prototype.forEach.call(langPanelEl.querySelectorAll("[data-lang]"), function (b) {
+      var on = b.getAttribute("data-lang") === lang;
+      if (on) {
+        b.setAttribute("aria-current", "true");
+        name = b.textContent;
+      } else {
+        b.removeAttribute("aria-current");
+      }
+    });
+    langPillEl.setAttribute("aria-label", t("langLabel") + (name ? ": " + name : ""));
+  }
+
+  // Pillola = pulsante: apre/chiude il menu; si chiude con clic fuori o Esc, e dopo la scelta di una lingua
+  if (langPillEl && langPanelEl) {
+    langPillEl.addEventListener("click", function () {
+      setLangPanel(langPanelEl.hidden);
+    });
+    Array.prototype.forEach.call(langPanelEl.querySelectorAll("[data-lang]"), function (b) {
+      b.addEventListener("click", function () {
+        switchLanguage(b.getAttribute("data-lang"));
+        setLangPanel(false);
+        langPillEl.focus({ preventScroll: true });
+      });
+    });
+    document.addEventListener("click", function (e) {
+      if (langPanelEl.hidden) return;
+      if (langPillEl.contains(e.target) || langPanelEl.contains(e.target)) return;
+      setLangPanel(false);
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key !== "Escape" || langPanelEl.hidden) return;
+      setLangPanel(false);
+      langPillEl.focus();
     });
   }
 
@@ -1818,7 +1875,7 @@
   renderTabs();
   syncFromHash(true);
   syncPrivacyFromHash(); // #privacy all'avvio
-  if (!hasExplicitLanguage()) openLanguageModal(null); // primo accesso, dopo il rendering del menu
+  if (!hasExplicitLanguage()) openLanguageModal(); // primo accesso, dopo il rendering del menu
   // Pill di stato e giorno evidenziato (pannello e footer) si aggiornano ogni minuto (senza ridisegnare il menu)
   window.setInterval(function () { renderStatus(); renderStatusPanel(); renderHours(); }, 60000);
 })();
