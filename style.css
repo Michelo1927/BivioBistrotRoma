@@ -92,6 +92,9 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   scroll-behavior: smooth;
+  /* Niente rettangolo azzurro che i telefoni disegnano al tocco su link e pulsanti (si eredita: vale per tutta la pagina).
+     L'anello del focus da tastiera (:focus-visible) resta. */
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -795,8 +798,7 @@ a.titoli__voce:hover { color: var(--ink); }
   cursor: pointer;
   pointer-events: auto;
   transition: color .2s var(--ease);
-  /* Tenendo premuto su un telefono: niente riquadro di evidenziazione, niente selezione del testo né menu contestuale */
-  -webkit-tap-highlight-color: transparent;
+  /* Tenendo premuto su un telefono: niente selezione del testo né menu contestuale */
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
