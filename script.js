@@ -1548,6 +1548,7 @@
   // ---------------------------------------------------------------- Orari: rendering (pill header + footer)
   var statusEl = document.querySelector(".status-pill");
   var statusPanelEl = document.querySelector(".status-panel");
+  var statusOpenTimer = null;
   var hoursEl = document.querySelector(".hours");
 
   /** Pill "Aperto · chiude alle 23:00" / "Chiuso · apre alle 07:30"; nascosta se non ci sono orari. */
@@ -1573,9 +1574,16 @@
   /** Apre/chiude il pannello degli orari sotto la pill e tiene allineati aria-expanded e classe. */
   function setStatusPanel(open) {
     if (!statusEl || !statusPanelEl) return;
+    var opening = open && statusPanelEl.hidden;
     statusEl.setAttribute("aria-expanded", open ? "true" : "false");
     statusEl.classList.toggle("is-open", open);
     statusPanelEl.hidden = !open;
+    if (opening) {
+      // Le righe entrano una dopo l'altra solo all'apertura: senza la classe non si rianimano al ridisegno di ogni minuto
+      statusPanelEl.classList.add("is-aprendo");
+      window.clearTimeout(statusOpenTimer);
+      statusOpenTimer = window.setTimeout(function () { statusPanelEl.classList.remove("is-aprendo"); }, 800);
+    }
   }
 
   /** Pannello sotto la pill: titolo + elenco orari (stesso elenco del footer). */
