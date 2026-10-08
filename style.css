@@ -1728,7 +1728,6 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Schermi molto stretti ---------- */
 @media (max-width: 380px) {
-  .tab { padding: .5rem .85rem; font-size: .78rem; }
   .dish__name { font-size: 1.25rem; }
   .status-pill { padding: 0 .7rem; }
 }
@@ -1760,10 +1759,16 @@ html.is-modal-open { overflow: hidden; }
   .lang-pill .status-pill__chevron { display: block; }
 }
 
-/* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
-@media (max-width: 419.98px) {
+/* ---------- Tab su telefono: quattro sezioni che occupano tutta la riga ---------- */
+/* Le tab si allargano fino a riempire la riga (flex-grow), con lo stesso carattere a ogni larghezza: prima, sotto i
+   420px, diventavano più piccole e restavano raggruppate al centro. Solo sotto i 350px il carattere si riduce. */
+@media (max-width: 519.98px) {
+  .tabs { gap: .35rem; }
+  .tab { flex: 1 1 auto; min-height: 36px; padding: .5rem; text-align: center; }
+}
+@media (max-width: 349.98px) {
   .tabs { gap: .3rem; }
-  .tab { min-height: 36px; padding: .4rem .6rem; font-size: .75rem; letter-spacing: 0; }
+  .tab { padding: .5rem .35rem; font-size: .75rem; letter-spacing: 0; }
 }
 
 /* ---------- Stampa ---------- */
