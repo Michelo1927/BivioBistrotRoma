@@ -560,7 +560,7 @@ button.chip {
   margin: 0 calc(-1 * var(--gutter)) 1rem;
   padding-bottom: .35rem;
 }
-.category__heading--titoli .titoli { margin: 0; }
+.category__heading--titoli .titoli { margin: 0; padding: 0 50%; }
 /* La prima fila di piatti ha la sua riga in alto: subito sotto quella dei titoli farebbe doppione, si taglia via */
 .category__heading--titoli + .dish-grid { clip-path: inset(1px 0 0 0); }
 .titoli {
@@ -569,7 +569,9 @@ button.chip {
   align-items: baseline;
   gap: 1.1rem;
   margin: 0 calc(-1 * var(--gutter)); /* da bordo a bordo dello schermo */
-  padding: 0 50vw; /* spazio ai lati: anche il primo e l'ultimo titolo possono stare al centro */
+  /* Spazio ai lati pari a metà riga: anche il primo e l'ultimo titolo possono stare al centro. In percentuale (non in vw):
+     su schermi più larghi del contenuto il padding in vw allargherebbe la riga oltre il suo contenitore, spostando il centro */
+  padding: 0 calc(50% + var(--gutter));
   overflow: hidden;
   -webkit-mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent);
   mask-image: linear-gradient(to right, transparent, #000 26%, #000 74%, transparent);
