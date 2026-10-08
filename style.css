@@ -194,10 +194,19 @@ data { font-variant-numeric: tabular-nums; }
 .pill-link svg { flex: 0 0 auto; color: var(--accent); }
 /* Solo icona: cerchio da 32px (il nome resta per gli screen reader) */
 .pill-link--icona {
+  position: relative;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
+}
+.pill-link--icona svg:not(.lang-open__flag) { width: 18px; height: 18px; }
+/* Area sensibile più grande del cerchio: 44px in altezza, e in larghezza fino a metà dello spazio tra un pulsante e l'altro */
+.pill-link--icona::after,
+.status-pill::after {
+  content: "";
+  position: absolute;
+  inset: -4px -3px;
 }
 /* Pillola "Il locale": e' un <button> */
 .pill-link--gallery { cursor: pointer; }
@@ -212,8 +221,9 @@ a.pill-link[href]:hover { border-color: var(--accent); }
   flex: 0 1 auto;
   min-width: 0;
   align-items: center;
+  position: relative; /* ancora per l'area sensibile (::after) */
   gap: .4rem;
-  height: 32px;
+  height: 36px;
   padding: 0 1rem;
   border: 1px solid color-mix(in srgb, var(--brand) 30%, transparent);
   border-radius: 999px;
@@ -1449,15 +1459,20 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Barra in alto: più compatta sui telefoni, per far stare il testo della pill di stato ---------- */
 /* Sotto i 380px sparisce anche la freccina della pill: il testo più lungo ("Chiuso · apre domani alle 07:30") entra a 360px */
-@media (max-width: 379.98px) {
-  .status-pill__chevron { display: none; }
-}
 @media (max-width: 519.98px) {
   .site-header__bar { gap: .3rem; }
-  .site-header__actions { gap: .25rem; padding-left: .4rem; }
-  .pill-link--icona { width: 30px; height: 30px; }
-  .lang-open { margin-left: .25rem; }
-  .status-pill { gap: .3rem; height: 30px; padding: 0 .8rem; font-size: .6875rem; letter-spacing: 0; }
+  .site-header__actions { padding-left: .4rem; }
+  .lang-open { width: 30px; margin-left: 0; } /* senza cerchio basta la larghezza della bandiera; l'area sensibile resta larga */
+  .status-pill { gap: .3rem; padding: 0 .8rem; font-size: .6875rem; letter-spacing: 0; }
+}
+@media (max-width: 379.98px) {
+  .status-pill__chevron { display: none; }
+  .site-header__bar { gap: .2rem; }
+  .site-header__actions { gap: .25rem; padding-left: .2rem; }
+  .pill-link--icona { width: 34px; height: 34px; }
+  .pill-link--icona::after { inset: -5px -2px; }
+  .lang-open { width: 26px; }
+  .status-pill { padding: 0 .5rem; }
 }
 
 /* ---------- Tab: quattro sezioni, più compatte sotto i 420px ---------- */
@@ -1468,7 +1483,7 @@ html.is-modal-open { overflow: hidden; }
 
 /* ---------- Stampa ---------- */
 @media print {
-  .menu-nav, .to-top, .skip-link, .dish__media, .status-pill, .status-panel, .pager, .site-header__actions, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
+  .menu-nav, .to-top, .skip-link, .dish__media, .status-pill, .status-panel, .pager, .site-header__actions, .lang-open, .lang-modal, .lightbox, .allergen-modal, .privacy-modal, .site-footer__privacy, .menu-notes__hint { display: none !important; }
   body, .site-header { background: #fff; }
   .onda { display: none; }
   .site-header__logo { width: 200px; }
