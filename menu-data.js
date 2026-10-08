@@ -152,7 +152,7 @@ window.BIVIO_MENU = Object.freeze({
       allergensHint: "Tocca i numeri di un piatto per vedere gli allergeni.",
       allergensContains: "{d} contiene:", allergensPresent: "presente in questo piatto",
       frozenMark: "Prodotto gelo",
-      seeSelection: "vedi la selezione in Distillati",
+      seeSelection: "Vedi la selezione in Distillati",
       hoursTitle: "Orari", openNow: "Aperto", closedNow: "Chiuso",
       closesAt: "chiude alle {t}", opensAt: "apre alle {t}", opensTomorrow: "apre domani alle {t}",
       opensOn: "apre {d} alle {t}", closedDay: "chiuso",
