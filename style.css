@@ -770,18 +770,39 @@ a.titoli__voce:hover { color: var(--ink); }
 .titoli--fissa { padding-bottom: .35rem; }
 
 /* Nelle stesse sezioni, a schermo, le intestazioni dentro la pagina sono piccole: servono solo a separare le categorie.
+   Stanno al centro, tra due lineette (a sinistra si confondevano con i nomi delle voci), con l'eventuale sottotitolo sotto.
    Quella della prima categoria sta subito sotto il titolo grande con lo stesso nome: si nasconde (resta il sottotitolo, se c'è).
    In stampa la nav non c'è e le intestazioni tornano grandi. */
 @media screen {
-  .category__heading--piccola { align-items: baseline; padding-bottom: .5rem; }
+  .category__heading--piccola {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    row-gap: .2rem;
+    padding-bottom: 0;
+    border-bottom: 0;
+    text-align: center;
+  }
   .category__heading--piccola .category__title {
+    display: flex;
+    align-items: center;
+    gap: .9rem;
+    width: 100%;
     font-family: var(--sans);
-    font-size: .75rem;
+    font-size: .875rem;
     font-weight: 600;
-    letter-spacing: .12em;
+    letter-spacing: .16em;
     line-height: 1.4;
     text-transform: uppercase;
     color: var(--accent);
+  }
+  .category__heading--piccola .category__title::before,
+  .category__heading--piccola .category__title::after {
+    content: "";
+    flex: 1 1 0;
+    min-width: 1.5rem;
+    height: 1px;
+    background: color-mix(in srgb, var(--brand) 38%, transparent);
   }
   .category__heading--piccola .category__subtitle { font-size: 1rem; }
   .category__heading--prima .category__title,
