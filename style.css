@@ -1181,10 +1181,30 @@ a.titoli__voce:hover { color: var(--ink); }
   -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
+/* Apertura: il pop-up cresce dal punto toccato (numeretti del piatto, link nel footer; origine messa da
+   setPopupOrigin in script.js, altrimenti il centro), poi il contenuto entra a cascata */
 .allergen-modal[open],
-.privacy-modal[open] { animation: lang-modal-in .3s var(--ease) both; }
+.privacy-modal[open] {
+  transform-origin: var(--origine-x, 50%) var(--origine-y, 50%);
+  animation: popup-cresce .38s var(--ease) both;
+}
 .allergen-modal[open]::backdrop,
 .privacy-modal[open]::backdrop { animation: lang-modal-fade-in .3s var(--ease) both; }
+.allergen-modal[open] .allergen-modal__panel > :not(button),
+.privacy-modal[open] .privacy-modal__panel > :not(button) { animation: popup-voce-in .4s var(--ease) .3s both; }
+.allergen-modal[open] .allergen-modal__panel > :nth-child(2),
+.privacy-modal[open] .privacy-modal__panel > :nth-child(2) { animation-delay: .1s; }
+.allergen-modal[open] .allergen-modal__panel > :nth-child(3),
+.privacy-modal[open] .privacy-modal__panel > :nth-child(3) { animation-delay: .15s; }
+.allergen-modal[open] .allergen-modal__panel > :nth-child(4),
+.privacy-modal[open] .privacy-modal__panel > :nth-child(4) { animation-delay: .2s; }
+.allergen-modal[open] .allergen-modal__panel > :nth-child(5),
+.privacy-modal[open] .privacy-modal__panel > :nth-child(5) { animation-delay: .25s; }
+/* Gli allergeni del piatto: il numero fa un piccolo balzo quando l'elenco è comparso */
+.allergen-modal[open] .is-presente .allergen__num { animation: allergene-balzo .45s var(--ease) .4s both; }
+@keyframes popup-cresce { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes popup-voce-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes allergene-balzo { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: none; } }
 .allergen-modal__panel,
 .privacy-modal__panel {
   position: relative;

@@ -516,6 +516,28 @@
     return s;
   }
 
+  /**
+   * Apertura dei pop-up allergeni e privacy: fa crescere il pop-up dal punto in cui sta `opener` (i numeretti del
+   * piatto, il link nel footer) impostando l'origine della trasformazione (--origine-x/-y, lette da style.css).
+   * Senza un opener visibile a schermo il pop-up cresce dal proprio centro. Va chiamata dopo l'apertura.
+   */
+  function setPopupOrigin(dialog, opener) {
+    var x = "50%", y = "50%";
+    try {
+      var r = opener && typeof opener.getBoundingClientRect === "function" ? opener.getBoundingClientRect() : null;
+      if (r && (r.width || r.height) && r.bottom > 0 && r.top < window.innerHeight) {
+        // Il centro non cambia con la scala dell'animazione già partita; le misure vere sono offsetWidth/Height
+        var d = dialog.getBoundingClientRect();
+        var sinistra = d.left + d.width / 2 - dialog.offsetWidth / 2;
+        var alto = d.top + d.height / 2 - dialog.offsetHeight / 2;
+        x = Math.round(r.left + r.width / 2 - sinistra) + "px";
+        y = Math.round(r.top + r.height / 2 - alto) + "px";
+      }
+      dialog.style.setProperty("--origine-x", x);
+      dialog.style.setProperty("--origine-y", y);
+    } catch (e) { /* non critico: resta l'origine al centro */ }
+  }
+
   /** Ricostruisce il contenuto del pop-up nella lingua corrente per `dish` (o per l'elenco completo se null). */
   function renderAllergenModal(dish) {
     var panel = allergenModalEl.querySelector(".allergen-modal__panel");
@@ -566,6 +588,7 @@
       // Nessun <dialog> modale: l'informazione deve comunque essere leggibile
       allergenModalEl.setAttribute("open", "");
     }
+    setPopupOrigin(allergenModalEl, opener);
     var panel = allergenModalEl.querySelector(".allergen-modal__panel");
     if (panel) panel.focus({ preventScroll: true });
   }
@@ -713,6 +736,7 @@
       // Nessun <dialog> modale: l'informativa deve comunque essere leggibile
       privacyModalEl.setAttribute("open", "");
     }
+    setPopupOrigin(privacyModalEl, opener);
     var panel = privacyModalEl.querySelector(".privacy-modal__panel");
     if (panel) panel.focus({ preventScroll: true });
   }
