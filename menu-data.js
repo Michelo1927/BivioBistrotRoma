@@ -75,8 +75,9 @@
  *  meta.links.maps / meta.links.whatsapp: URL https definitivi. Stringa vuota = pulsante "in arrivo".
  *  meta.address / meta.phone: indirizzo e telefono mostrati nel footer (l'indirizzo apre meta.links.maps,
  *  il telefono diventa un link tel:). In index.html c'è una copia statica: se li cambi, allinea anche l'HTML.
- *  meta.legal: { company, vat, seat, email, host, updated }. Ragione sociale e partita IVA compaiono nel footer e
- *  alimentano l'informativa privacy (pop-up aperto dal link "Privacy" nel footer o da #privacy). Regola "in attesa":
+ *  meta.legal: { company, vat, seat, rea, capital, email, host, updated }. Ragione sociale e partita IVA compaiono nel footer e
+ *  alimentano l'informativa privacy (pop-up aperto dal link "Privacy" nel footer o da #privacy). `rea` (testo) e
+ *  `capital` (numero, euro interamente versati) sono facoltativi e compaiono solo nell'informativa. Regola "in attesa":
  *  finché company, vat ed email non sono TUTTI compilati, la riga legale e il link Privacy non compaiono e #privacy
  *  non apre nulla. `seat` vuoto = si usa meta.address. `host` e `updated` (AAAA-MM-GG) compaiono nell'informativa.
  *  Solo per debug: `?anteprima=legale` nell'URL mostra riga e pop-up con "[da completare]" al posto dei dati mancanti.
@@ -84,8 +85,8 @@
  * INFORMATIVA PRIVACY
  *  privacy: { it: [ { h, p: [paragrafo, ...] }, ... ], en: [ ... ] } = sezioni dell'informativa per lingua
  *  (titolo `h` + paragrafi `p`). Un paragrafo può essere { noAnalytics, analytics }: si usa il secondo testo
- *  quando meta.legal.analytics è true (statistiche Cloudflare accese), altrimenti il primo. Nei paragrafi i segnaposto {company}, {vat}, {seat}, {email}, {host} vengono
- *  sostituiti con i valori di meta.legal. Se manca una lingua si usa l'italiano. Se cambi il testo, aggiorna meta.legal.updated.
+ *  quando meta.legal.analytics è true (statistiche Cloudflare accese), altrimenti il primo. Nei paragrafi i segnaposto {company}, {vat}, {seat}, {rea}, {capital}, {email}, {host} vengono
+ *  sostituiti con i valori di meta.legal; un paragrafo che usa {rea} o {capital} viene saltato se quel dato è vuoto. Se manca una lingua si usa l'italiano. Se cambi il testo, aggiorna meta.legal.updated.
  *
  * IMMAGINI DEI PIATTI
  *  Salva la foto come  assets/images/<category>/<id>.jpg  (rapporto 4:3, consigliato 1200x900 o 800x600, < 300 KB).
@@ -120,13 +121,15 @@ window.BIVIO_MENU = Object.freeze({
     phone: "+39 378 067 0878",
     // Dati legali: finché company, vat ed email non sono tutti compilati, riga legale e informativa privacy restano nascoste.
     legal: {
-      company: "",   // ragione sociale esatta, es. "Bivio S.r.l."
-      vat: "",       // partita IVA, solo le 11 cifre
+      company: "BIVIO 2026 S.R.L.S.",   // ragione sociale esatta (sigla iscritta al Registro Imprese)
+      vat: "18547191009",       // partita IVA, solo le 11 cifre
       seat: "",      // sede legale; lascia vuoto se coincide con `address`
-      email: "",     // contatto per le richieste sulla privacy
+      rea: "RM-1791596",  // numero REA (ufficio del Registro Imprese + numero); vuoto = non compare
+      capital: 1000,      // capitale sociale interamente versato, in euro; null = non compare
+      email: "privacy@example.com",  // FITTIZIA, DA SOSTITUIRE: contatto per le richieste sulla privacy
       host: "Cloudflare Pages – Cloudflare, Inc.",  // fornitore che ospita il sito (compare nell'informativa)
       analytics: false,  // true = Cloudflare Web Analytics è accesa (dal pannello Cloudflare): cambia la frase dell'informativa. Non accende le statistiche.
-      updated: "2026-10-07"  // data dell'informativa (AAAA-MM-GG): aggiornala quando cambi i dati o il testo
+      updated: "2026-10-09"  // data dell'informativa (AAAA-MM-GG): aggiornala quando cambi i dati o il testo
     },
     links: {
       maps: "https://maps.app.goo.gl/19F1xGau4LCWjnEJA",
@@ -194,11 +197,13 @@ window.BIVIO_MENU = Object.freeze({
     }
   },
 
-  // Informativa privacy (vedi lo schema in testa al file). Segnaposto: {company} {vat} {seat} {email} {host}
+  // Informativa privacy (vedi lo schema in testa al file). Segnaposto: {company} {vat} {seat} {rea} {capital} {email} {host}
   privacy: {
     it: [
       { h: "Titolare del trattamento", p: [
         "{company}, partita IVA {vat}, con sede in {seat}.",
+        "Registro delle Imprese di Roma, REA {rea}.",
+        "Capitale sociale {capital} interamente versato.",
         "Per qualsiasi richiesta sulla privacy puoi scrivere a {email}."
       ] },
       { h: "Quali dati trattiamo", p: [
@@ -222,6 +227,8 @@ window.BIVIO_MENU = Object.freeze({
     en: [
       { h: "Data controller", p: [
         "{company}, VAT no. {vat}, registered office at {seat}.",
+        "Rome Companies Register, REA no. {rea}.",
+        "Share capital {capital}, fully paid up.",
         "For any privacy request you can write to {email}."
       ] },
       { h: "What data we process", p: [

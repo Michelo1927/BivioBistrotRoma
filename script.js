@@ -594,7 +594,7 @@
 
   // ---------------------------------------------------------------- Dati legali + pop-up privacy
   /**
-   * Dati legali { company, vat, seat, email, host, updated } oppure null ("in attesa": niente riga legale né informativa).
+   * Dati legali { company, vat, seat, rea, capital, email, host, updated } oppure null ("in attesa": niente riga legale né informativa).
    * Servono company, vat ed email compilati; `seat` vuoto = meta.address.
    * SOLO PER DEBUG: `?anteprima=legale` nell'URL mostra comunque i dati, con "[da completare]" al posto di quelli mancanti.
    */
@@ -605,14 +605,17 @@
     var company = pulisci(legal.company), vat = pulisci(legal.vat), email = pulisci(legal.email);
     var seat = pulisci(legal.seat) || pulisci(meta.address);
     var host = pulisci(legal.host), updated = pulisci(legal.updated);
+    // Facoltativi, solo nell'informativa: numero REA e capitale sociale versato (euro)
+    var rea = pulisci(legal.rea);
+    var capital = typeof legal.capital === "number" && legal.capital > 0 ? legal.capital : null;
     if (company && vat && email) {
-      return { company: company, vat: vat, seat: seat, email: email, host: host, updated: updated, analytics: legal.analytics === true };
+      return { company: company, vat: vat, seat: seat, rea: rea, capital: capital, email: email, host: host, updated: updated, analytics: legal.analytics === true };
     }
     var anteprima = false;
     try { anteprima = new URLSearchParams(location.search).get("anteprima") === "legale"; } catch (e) { /* URLSearchParams assente */ }
     if (!anteprima) return null;
     var mancante = "[" + t("legalPending") + "]";
-    return { company: company || mancante, vat: vat || mancante, seat: seat || mancante, email: email || mancante, host: host || mancante, updated: updated, analytics: legal.analytics === true };
+    return { company: company || mancante, vat: vat || mancante, seat: seat || mancante, rea: rea, capital: capital, email: email || mancante, host: host || mancante, updated: updated, analytics: legal.analytics === true };
   }
 
   /** Riga legale nel footer ("Ragione sociale · P. IVA … · Privacy"); nascosta e vuota se i dati sono in attesa. */
@@ -645,12 +648,23 @@
     } catch (e) { return s; }
   }
 
-  /** Sostituisce i segnaposto {company} {vat} {seat} {email} {host} in `text` (solo testo, niente HTML). */
+  /**
+   * Sostituisce i segnaposto {company} {vat} {seat} {rea} {capital} {email} {host} in `text` (solo testo, niente HTML).
+   * Restituisce "" se il testo usa un dato facoltativo ({rea}, {capital}) che non è compilato: quel paragrafo va saltato.
+   */
   function fillLegal(text, data) {
-    ["company", "vat", "seat", "email", "host"].forEach(function (k) {
-      text = text.split("{" + k + "}").join(data[k]);
+    var valori = {
+      company: data.company, vat: data.vat, seat: data.seat, email: data.email, host: data.host,
+      rea: data.rea, capital: data.capital ? formatPrice(data.capital) : ""
+    };
+    var manca = false;
+    Object.keys(valori).forEach(function (k) {
+      var segnaposto = "{" + k + "}";
+      if (text.indexOf(segnaposto) === -1) return;
+      if (!valori[k]) manca = true;
+      text = text.split(segnaposto).join(valori[k]);
     });
-    return text;
+    return manca ? "" : text;
   }
 
   /** Ricostruisce il contenuto del pop-up privacy nella lingua corrente. */
@@ -671,7 +685,8 @@
       (sezione.p || []).forEach(function (par) {
         // Paragrafo a due versioni: dipende da meta.legal.analytics (statistiche Cloudflare accese o no)
         if (typeof par !== "string") par = (data.analytics ? par.analytics : par.noAnalytics) || "";
-        panel.appendChild(el("p", { text: fillLegal(par, data) }));
+        var testo = fillLegal(par, data);
+        if (testo) panel.appendChild(el("p", { text: testo }));
       });
     });
 
