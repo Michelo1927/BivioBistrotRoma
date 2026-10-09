@@ -1169,7 +1169,7 @@ a.titoli__voce:hover { color: var(--ink); }
   padding: 0; /* il padding sta sul pannello (__panel): così e.target === dialog solo sul backdrop */
   border: 0;
   border-radius: 6px;
-  background: #FDEBCB; /* crema attenuato: a metà tra il crema del logo e il fondo della pagina */
+  background: var(--bg); /* lo stesso fondo dell'area del menu */
   color: var(--ink);
   text-align: left;
   box-shadow: 0 18px 50px rgba(42, 18, 22, .18), 0 2px 8px rgba(42, 18, 22, .08);
