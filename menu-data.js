@@ -17,6 +17,10 @@
  *                 Campo opzionale di sezione: `note` (riquadro informativo in cima alla scheda).
  *                 Campo opzionale di sezione: `paged: true` = la sezione mostra una categoria alla volta;
  *                 i chip cambiano categoria e in fondo c'è il pager con la categoria precedente e la successiva.
+ *                 Campo opzionale di sezione: `orderByTime: [{ from: "HH:MM", until: "HH:MM", order: [id, …] }]`
+ *                 = ordine completo delle categorie per fascia oraria (ora di Roma; `until` <= `from` scavalca la
+ *                 mezzanotte). Vale la prima fascia attiva; fuori da ogni fascia resta l'ordine di dichiarazione.
+ *                 Le categorie non elencate in `order` vanno in coda. Usato dalla Caffetteria.
  *                 Campo opzionale di categoria: `firstFrom: "HH:MM"` = dalle HH:MM (ora di Roma) la
  *                 categoria passa in prima posizione. `firstUntil: "HH:MM"` (opzionale) chiude la fascia;
  *                 senza, vale fino a mezzanotte; se è minore o uguale di `firstFrom` la fascia prosegue
@@ -276,12 +280,18 @@ window.BIVIO_MENU = Object.freeze({
       type: "list2", source: "cafe", priceColumns: [{ key: "counterPrice", label: "counter" }, { key: "tablePrice", label: "table" }],
       note: "La maggiorazione al tavolo verrà applicata anche per l'utilizzo senza il servizio",
       categories: [
+        // Ordine di dichiarazione = ordine della mattina (04:00-10:30); nelle altre fasce vale `orderByTime` qui sotto
         { id: "caffe", label: "Caffè", en: { label: "Coffee" } },
         { id: "latte-cappuccini", label: "Latte e cappuccini", en: { label: "Milk & cappuccino" } },
-        { id: "cioccolata-infusi", label: "Cioccolata e infusi", en: { label: "Hot chocolate & infusions" } },
         { id: "dolci-lieviti", label: "Dolci e lieviti", en: { label: "Pastries & cakes" } },
-        { id: "bibite", label: "Bibite", en: { label: "Soft drinks" }, firstFrom: "11:00", firstUntil: "04:00" },
-        { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" }, firstFrom: "11:00", firstUntil: "04:00" }
+        { id: "cioccolata-infusi", label: "Cioccolata e infusi", en: { label: "Hot chocolate & infusions" } },
+        { id: "bibite", label: "Bibite", en: { label: "Soft drinks" } },
+        { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" } }
+      ],
+      orderByTime: [
+        { from: "10:30", until: "15:30", order: ["bibite", "amari-caffetteria", "caffe", "latte-cappuccini", "cioccolata-infusi", "dolci-lieviti"] },
+        { from: "15:30", until: "18:30", order: ["bibite", "caffe", "cioccolata-infusi", "amari-caffetteria", "latte-cappuccini", "dolci-lieviti"] },
+        { from: "18:30", until: "04:00", order: ["bibite", "amari-caffetteria", "caffe", "dolci-lieviti", "cioccolata-infusi", "latte-cappuccini"] }
       ]
     }
   ],

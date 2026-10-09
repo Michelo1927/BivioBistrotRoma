@@ -165,9 +165,24 @@
     return (d.getHours() < 10 ? "0" : "") + d.getHours() + ":" + (d.getMinutes() < 10 ? "0" : "") + d.getMinutes();
   }
 
-  /** Categorie della sezione nell'ordine di rendering: quelle la cui fascia `firstFrom`/`firstUntil` è attiva passano in testa (in ordine di dichiarazione). */
+  /**
+   * Categorie della sezione nell'ordine di rendering. Se la sezione ha `orderByTime` e una sua fascia è attiva, vale
+   * l'ordine di quella fascia (le categorie non elencate restano in coda, in ordine di dichiarazione). Altrimenti quelle
+   * la cui fascia `firstFrom`/`firstUntil` è attiva passano in testa (in ordine di dichiarazione).
+   */
   function orderedCategories(section) {
     var now = currentTime();
+    var slots = section.orderByTime || [];
+    for (var i = 0; i < slots.length; i++) {
+      if (!slots[i] || !slots[i].order || !inWindow(slots[i].from, slots[i].until, now)) continue;
+      var order = slots[i].order;
+      var listed = [], others = [];
+      order.forEach(function (id) {
+        section.categories.forEach(function (cat) { if (cat.id === id && listed.indexOf(cat) === -1) listed.push(cat); });
+      });
+      section.categories.forEach(function (cat) { if (listed.indexOf(cat) === -1) others.push(cat); });
+      return listed.concat(others);
+    }
     var first = [], rest = [];
     section.categories.forEach(function (cat) {
       (cat.firstFrom && inWindow(cat.firstFrom, cat.firstUntil, now) ? first : rest).push(cat);
