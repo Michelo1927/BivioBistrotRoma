@@ -538,6 +538,26 @@
     } catch (e) { /* non critico: resta l'origine al centro */ }
   }
 
+  /**
+   * Chiusura animata dei pop-up allergeni e privacy (X, sfondo, Esc): il pop-up rimpicciolisce verso il punto da cui
+   * era uscito (classe .is-closing), poi si chiude davvero. animationend + timeout di sicurezza, come il modale lingua.
+   */
+  function closePopup(dialog) {
+    if (!dialog || !dialog.open || dialog.classList.contains("is-closing")) return;
+    var done = false;
+    function finish() {
+      if (done) return;
+      done = true;
+      dialog.removeEventListener("animationend", onEnd);
+      dialog.classList.remove("is-closing");
+      if (dialog.open) dialog.close();
+    }
+    function onEnd(e) { if (e.target === dialog && e.animationName === "popup-chiude") finish(); }
+    dialog.addEventListener("animationend", onEnd);
+    dialog.classList.add("is-closing");
+    window.setTimeout(finish, 320);
+  }
+
   /** Ricostruisce il contenuto del pop-up nella lingua corrente per `dish` (o per l'elenco completo se null). */
   function renderAllergenModal(dish) {
     var panel = allergenModalEl.querySelector(".allergen-modal__panel");
@@ -549,7 +569,7 @@
     panel.textContent = "";
 
     var closeBtn = el("button", { type: "button", class: "allergen-modal__close", "aria-label": t("close") }, [buildCloseIcon(24)]);
-    closeBtn.addEventListener("click", function () { allergenModalEl.close(); });
+    closeBtn.addEventListener("click", function () { closePopup(allergenModalEl); });
     panel.appendChild(closeBtn);
     panel.appendChild(el("h2", { class: "allergen-modal__title", id: "allergen-modal-title", text: t("allergensInfoTitle") }));
 
@@ -611,8 +631,10 @@
     });
     // Click sullo sfondo: il padding sta sul pannello, quindi e.target === dialog solo fuori dal pannello
     allergenModalEl.addEventListener("click", function (e) {
-      if (e.target === allergenModalEl) allergenModalEl.close();
+      if (e.target === allergenModalEl) closePopup(allergenModalEl);
     });
+    // Esc: stessa chiusura animata
+    allergenModalEl.addEventListener("cancel", function (e) { e.preventDefault(); closePopup(allergenModalEl); });
   }
 
   // ---------------------------------------------------------------- Dati legali + pop-up privacy
@@ -698,7 +720,7 @@
     panel.textContent = "";
 
     var closeBtn = el("button", { type: "button", class: "privacy-modal__close", "aria-label": t("close") }, [buildCloseIcon(24)]);
-    closeBtn.addEventListener("click", function () { privacyModalEl.close(); });
+    closeBtn.addEventListener("click", function () { closePopup(privacyModalEl); });
     panel.appendChild(closeBtn);
     panel.appendChild(el("h2", { class: "privacy-modal__title", id: "privacy-modal-title", text: t("privacyTitle") }));
 
@@ -759,8 +781,10 @@
     });
     // Click sullo sfondo: il padding sta sul pannello, quindi e.target === dialog solo fuori dal pannello
     privacyModalEl.addEventListener("click", function (e) {
-      if (e.target === privacyModalEl) privacyModalEl.close();
+      if (e.target === privacyModalEl) closePopup(privacyModalEl);
     });
+    // Esc: stessa chiusura animata
+    privacyModalEl.addEventListener("cancel", function (e) { e.preventDefault(); closePopup(privacyModalEl); });
   }
 
   /** Hash esattamente "#privacy": apre il pop-up (se i dati legali ci sono). */

@@ -1186,23 +1186,29 @@ a.titoli__voce:hover { color: var(--ink); }
 .allergen-modal[open],
 .privacy-modal[open] {
   transform-origin: var(--origine-x, 50%) var(--origine-y, 50%);
-  animation: popup-cresce .38s var(--ease) both;
+  animation: popup-cresce .25s var(--ease) both;
 }
 .allergen-modal[open]::backdrop,
-.privacy-modal[open]::backdrop { animation: lang-modal-fade-in .3s var(--ease) both; }
+.privacy-modal[open]::backdrop { animation: lang-modal-fade-in .22s var(--ease) both; }
 .allergen-modal[open] .allergen-modal__panel > :not(button),
-.privacy-modal[open] .privacy-modal__panel > :not(button) { animation: popup-voce-in .4s var(--ease) .3s both; }
+.privacy-modal[open] .privacy-modal__panel > :not(button) { animation: popup-voce-in .28s var(--ease) .18s both; }
 .allergen-modal[open] .allergen-modal__panel > :nth-child(2),
-.privacy-modal[open] .privacy-modal__panel > :nth-child(2) { animation-delay: .1s; }
+.privacy-modal[open] .privacy-modal__panel > :nth-child(2) { animation-delay: .06s; }
 .allergen-modal[open] .allergen-modal__panel > :nth-child(3),
-.privacy-modal[open] .privacy-modal__panel > :nth-child(3) { animation-delay: .15s; }
+.privacy-modal[open] .privacy-modal__panel > :nth-child(3) { animation-delay: .09s; }
 .allergen-modal[open] .allergen-modal__panel > :nth-child(4),
-.privacy-modal[open] .privacy-modal__panel > :nth-child(4) { animation-delay: .2s; }
+.privacy-modal[open] .privacy-modal__panel > :nth-child(4) { animation-delay: .12s; }
 .allergen-modal[open] .allergen-modal__panel > :nth-child(5),
-.privacy-modal[open] .privacy-modal__panel > :nth-child(5) { animation-delay: .25s; }
+.privacy-modal[open] .privacy-modal__panel > :nth-child(5) { animation-delay: .15s; }
 /* Gli allergeni del piatto: il numero fa un piccolo balzo quando l'elenco è comparso */
-.allergen-modal[open] .is-presente .allergen__num { animation: allergene-balzo .45s var(--ease) .4s both; }
+.allergen-modal[open] .is-presente .allergen__num { animation: allergene-balzo .35s var(--ease) .25s both; }
+/* Chiusura (classe messa da closePopup in script.js): più rapida dell'apertura, torna verso il punto di partenza */
+.allergen-modal.is-closing,
+.privacy-modal.is-closing { animation: popup-chiude .18s var(--ease) both; }
+.allergen-modal.is-closing::backdrop,
+.privacy-modal.is-closing::backdrop { animation: lang-modal-fade-out .18s var(--ease) both; }
 @keyframes popup-cresce { from { opacity: 0; transform: scale(.7); } to { opacity: 1; transform: none; } }
+@keyframes popup-chiude { from { opacity: 1; transform: none; } to { opacity: 0; transform: scale(.8); } }
 @keyframes popup-voce-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes allergene-balzo { 0% { transform: scale(.6); } 60% { transform: scale(1.18); } 100% { transform: none; } }
 .allergen-modal__panel,
