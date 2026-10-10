@@ -916,20 +916,25 @@
    * Centra `active` nella riga di titoli `row`. Con `from` (il titolo che era attivo) la riga parte centrata su quello
    * e scorre fino al nuovo, mentre i due si scambiano grandezza e colore (classi --entra / --esce), come un carosello.
    * Senza `from`, o con il movimento ridotto, si centra e basta.
+   * `start` (facoltativo): posizione da cui far partire lo scorrimento al posto del centro di `from`; serve quando la
+   * riga è stata trascinata con il dito e va riportata al centro da dove è stata lasciata (anche senza cambio di titolo).
    */
-  function slideTitles(row, active, from) {
+  function slideTitles(row, active, from, start) {
     var token = ++titleTween;
     Array.prototype.forEach.call(row.children, function (n) { n.classList.remove("titoli__voce--entra", "titoli__voce--esce"); });
     var to = titleCenter(row, active);
-    if (!from || from === active || reducedMotion.matches) {
+    var swap = !!from && from !== active;
+    if ((!swap && start === undefined) || reducedMotion.matches) {
       row.scrollLeft = to;
       return;
     }
-    var start = titleCenter(row, from);
+    if (start === undefined) start = titleCenter(row, from);
     row.scrollLeft = start;
     void row.offsetWidth; // riavvia le animazioni se le classi c'erano già
-    active.classList.add("titoli__voce--entra");
-    from.classList.add("titoli__voce--esce");
+    if (swap) {
+      active.classList.add("titoli__voce--entra");
+      from.classList.add("titoli__voce--esce");
+    }
     var t0 = null;
     function step(ts) {
       if (token !== titleTween || !document.contains(row)) return; // superato da un altro scorrimento o riga ridisegnata
@@ -974,6 +979,100 @@
     next.classList.add("titoli__voce--attiva");
     next.setAttribute("aria-current", "true");
     slideTitles(navTitlesEl, next, old);
+  }
+
+  // Sezioni a scorrimento (classe `titoli--trascina` messa da renderSubnav): la riga dei titoli nella nav si
+  // trascina in orizzontale con il dito o con il mouse. Al rilascio il titolo più vicino al centro diventa quello
+  // attivo e la pagina va a quella categoria. Lo scorrimento verticale resta al browser (CSS: touch-action: pan-y).
+  var titleDrag = null; // { id, x, scroll, dx, moved } del trascinamento in corso
+  var titleDragClick = false; // il clic che segue un trascinamento non deve aprire il titolo sotto il dito
+
+  /** Titolo della riga più vicino al centro, nella posizione in cui la riga si trova adesso. */
+  function nearestTitle(row) {
+    var mid = row.scrollLeft + row.clientWidth / 2, best = null, gap = Infinity;
+    Array.prototype.forEach.call(row.children, function (n) {
+      var d = Math.abs(n.offsetLeft + n.offsetWidth / 2 - mid);
+      if (d < gap) { gap = d; best = n; }
+    });
+    return best;
+  }
+
+  /** Fine del trascinamento: `pick` = sceglie il titolo più vicino al centro; altrimenti la riga torna su quello attivo. */
+  function dropTitles(pick) {
+    var drag = titleDrag;
+    titleDrag = null;
+    navTitlesEl.classList.remove("is-trascinata");
+    if (!drag || !drag.moved) return;
+    var old = navTitlesEl.querySelector(".titoli__voce--attiva");
+    var next = pick ? nearestTitle(navTitlesEl) : old;
+    if (pick && old && next === old && Math.abs(drag.dx) > 40) {
+      // Gesto breve ma deciso: il titolo attivo è largo e resterebbe il più vicino, si passa comunque a quello accanto
+      next = (drag.dx < 0 ? old.nextElementSibling : old.previousElementSibling) || old;
+    }
+    if (!next) return;
+    // Il titolo scelto resta dov'è sotto il dito anche se cambiando grandezza la riga si ridispone, poi scorre al centro
+    var offset = navTitlesEl.scrollLeft - titleCenter(navTitlesEl, next);
+    if (old && old !== next) {
+      old.classList.remove("titoli__voce--attiva");
+      old.removeAttribute("aria-current");
+      next.classList.add("titoli__voce--attiva");
+      next.setAttribute("aria-current", "true");
+    }
+    slideTitles(navTitlesEl, next, old, titleCenter(navTitlesEl, next) + offset);
+    if (next !== old) scrollChip(next.getAttribute("data-cat"));
+  }
+
+  if (navTitlesEl && "PointerEvent" in window) {
+    navTitlesEl.addEventListener("pointerdown", function (e) {
+      titleDragClick = false;
+      if (!navTitlesEl.classList.contains("titoli--trascina")) return;
+      if (e.pointerType === "mouse" && e.button !== 0) return;
+      titleDrag = { id: e.pointerId, x: e.clientX, scroll: navTitlesEl.scrollLeft, dx: 0, moved: false };
+    });
+    navTitlesEl.addEventListener("pointermove", function (e) {
+      if (!titleDrag || e.pointerId !== titleDrag.id) return;
+      titleDrag.dx = e.clientX - titleDrag.x;
+      if (!titleDrag.moved) {
+        if (Math.abs(titleDrag.dx) < 6) return; // sotto questa soglia è un tocco, non un trascinamento
+        titleDrag.moved = true;
+        titleDragClick = true;
+        titleTween++; // ferma lo scorrimento automatico ancora in corso
+        titleDrag.scroll = navTitlesEl.scrollLeft;
+        titleDrag.x = e.clientX;
+        titleDrag.dx = 0;
+        navTitlesEl.classList.add("is-trascinata");
+        try { navTitlesEl.setPointerCapture(e.pointerId); } catch (err) { /* puntatore già rilasciato */ }
+      }
+      navTitlesEl.scrollLeft = titleDrag.scroll - titleDrag.dx;
+    });
+    navTitlesEl.addEventListener("pointerup", function (e) {
+      if (titleDrag && e.pointerId === titleDrag.id) dropTitles(true);
+    });
+    // Il browser ha preso il gesto per sé (scorrimento verticale della pagina): la riga torna sul titolo attivo
+    navTitlesEl.addEventListener("pointercancel", function (e) {
+      if (titleDrag && e.pointerId === titleDrag.id) dropTitles(false);
+    });
+    navTitlesEl.addEventListener("click", function (e) {
+      if (!titleDragClick) return;
+      titleDragClick = false;
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+    // Con il mouse il browser trascinerebbe il link (anteprima fantasma) invece della riga
+    navTitlesEl.addEventListener("dragstart", function (e) {
+      if (navTitlesEl.classList.contains("titoli--trascina")) e.preventDefault();
+    });
+  }
+
+  /** Sezioni a scorrimento: porta la pagina alla categoria `catId` scelta dalla riga dei titoli (clic o trascinamento). */
+  function scrollChip(catId) {
+    // Il titolo scelto resta evidenziato finché l'utente non scorre di nuovo: una categoria corta in fondo
+    // alla pagina non può arrivare in cima, e lo scrollspy da solo evidenzierebbe quella prima
+    spyLock = catId;
+    spyMarked = catId;
+    markChip(catId);
+    scrollToCategory(catId);
+    updateHash(activeSectionId + "/" + catId);
   }
 
   /**
@@ -1217,6 +1316,7 @@
     navEl.classList.toggle("menu-nav--titoli", isPaged(section)); // sezioni a pagine: chip sovrapposte, vedi syncTitles
     navTitlesEl.setAttribute("aria-label", t("categoriesLabel"));
     navTitlesEl.setAttribute("role", "navigation");
+    navTitlesEl.classList.toggle("titoli--trascina", !isPaged(section)); // sezioni a scorrimento: riga trascinabile
 
     /** Titolo di una categoria nella riga agganciata (sezioni a scorrimento): al clic la pagina va a quella categoria. */
     function addTitle(catId, label, href) {
@@ -1236,16 +1336,6 @@
         onClick();
       });
       subnavEl.appendChild(chip);
-    }
-
-    function scrollChip(catId) {
-      // La chip scelta resta evidenziata finché l'utente non scorre di nuovo: una categoria corta in fondo
-      // alla pagina non può arrivare in cima, e lo scrollspy da solo evidenzierebbe quella prima
-      spyLock = catId;
-      spyMarked = catId;
-      markChip(catId);
-      scrollToCategory(catId);
-      updateHash(section.id + "/" + catId);
     }
 
     if (isPaged(section)) {
@@ -1347,7 +1437,7 @@
    * Non fa nulla finché vale la scelta fatta con un clic su una chip (spyLock).
    */
   function spyUpdate() {
-    if (spyLock || !spyOrder.length) return;
+    if (spyLock || (titleDrag && titleDrag.moved) || !spyOrder.length) return; // né mentre si trascina la riga dei titoli
     var pick = null;
     if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
       pick = spyOrder[spyOrder.length - 1];

@@ -768,6 +768,16 @@ a.titoli__voce:hover { color: var(--ink); }
 .titoli--fissa:empty { display: none; }
 .titoli--fissa .titoli__voce { padding: .2rem 0 0; }
 .titoli--fissa { padding-bottom: .35rem; }
+/* La riga si trascina in orizzontale (script.js: titleDrag); in verticale il gesto resta alla pagina */
+.titoli--trascina {
+  touch-action: pan-y;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.titoli--trascina .titoli__voce { -webkit-user-drag: none; }
+.titoli--trascina.is-trascinata,
+.titoli--trascina.is-trascinata .titoli__voce { cursor: grabbing; }
 
 /* Nelle stesse sezioni, a schermo, le intestazioni dentro la pagina sono piccole: servono solo a separare le categorie.
    Stanno al centro, tra due lineette (a sinistra si confondevano con i nomi delle voci), con l'eventuale sottotitolo sotto.
