@@ -290,15 +290,15 @@ window.BIVIO_MENU = Object.freeze({
         // Ordine di dichiarazione = ordine della mattina (04:00-10:30); nelle altre fasce vale `orderByTime` qui sotto
         { id: "caffe", label: "Caffè", en: { label: "Coffee" } },
         { id: "latte-cappuccini", label: "Latte e cappuccini", en: { label: "Milk & cappuccino" } },
-        { id: "dolci-lieviti", label: "Dolci e lieviti", en: { label: "Pastries & cakes" } },
+        { id: "dolci-lievitati", label: "Dolci e lievitati", en: { label: "Pastries & cakes" } },
         { id: "cioccolata-infusi", label: "Cioccolata e infusi", en: { label: "Hot chocolate & infusions" } },
         { id: "bibite", label: "Bibite", en: { label: "Soft drinks" } },
         { id: "amari-caffetteria", label: "Amari", en: { label: "Amari" } }
       ],
       orderByTime: [
-        { from: "10:30", until: "15:30", order: ["bibite", "amari-caffetteria", "caffe", "latte-cappuccini", "cioccolata-infusi", "dolci-lieviti"] },
-        { from: "15:30", until: "18:30", order: ["bibite", "caffe", "cioccolata-infusi", "amari-caffetteria", "latte-cappuccini", "dolci-lieviti"] },
-        { from: "18:30", until: "04:00", order: ["bibite", "amari-caffetteria", "caffe", "dolci-lieviti", "cioccolata-infusi", "latte-cappuccini"] }
+        { from: "10:30", until: "15:30", order: ["bibite", "amari-caffetteria", "caffe", "latte-cappuccini", "cioccolata-infusi", "dolci-lievitati"] },
+        { from: "15:30", until: "18:30", order: ["bibite", "caffe", "cioccolata-infusi", "amari-caffetteria", "latte-cappuccini", "dolci-lievitati"] },
+        { from: "18:30", until: "04:00", order: ["bibite", "amari-caffetteria", "caffe", "dolci-lievitati", "cioccolata-infusi", "latte-cappuccini"] }
       ]
     }
   ],
@@ -580,10 +580,10 @@ window.BIVIO_MENU = Object.freeze({
     { id: "cioccolata-calda", name: "Cioccolata calda", detail: "Con panna: maggiorazione di 1,00 €", counterPrice: 4.50, tablePrice: 6.00, category: "cioccolata-infusi", en: { name: "Hot chocolate", detail: "With whipped cream: €1.00 extra" } },
     { id: "infusi", name: "Infusi", counterPrice: 4.50, tablePrice: 6.00, category: "cioccolata-infusi", en: { name: "Herbal teas & infusions" } },
 
-    // --- Dolci e lieviti
-    { id: "lieviti", name: "Lieviti", counterPrice: 1.80, tablePrice: 2.20, category: "dolci-lieviti", allergens: "ask", en: { name: "Pastries" } },
-    { id: "lievito-vegano", name: "Lievito vegano", counterPrice: 2.20, tablePrice: 2.80, category: "dolci-lieviti", allergens: "ask", en: { name: "Vegan pastry" } },
-    { id: "ciambellone-crostata", name: "Ciambellone / Crostata", counterPrice: 4.50, tablePrice: 6.00, category: "dolci-lieviti", allergens: "ask", en: { name: "Ring cake / Tart" } },
+    // --- Dolci e lievitati
+    { id: "lievitati", name: "Lievitati", counterPrice: 1.80, tablePrice: 2.20, category: "dolci-lievitati", allergens: "ask", en: { name: "Pastries" } },
+    { id: "lievitato-vegano", name: "Lievitato vegano", counterPrice: 2.20, tablePrice: 2.80, category: "dolci-lievitati", allergens: "ask", en: { name: "Vegan pastry" } },
+    { id: "ciambellone-crostata", name: "Ciambellone / Crostata", counterPrice: 4.50, tablePrice: 6.00, category: "dolci-lievitati", allergens: "ask", en: { name: "Ring cake / Tart" } },
 
     // --- Bibite
     { id: "succhi", name: "Succhi di frutta", counterPrice: 3.50, tablePrice: 4.50, category: "bibite", en: { name: "Fruit juices" } },
